@@ -4,6 +4,7 @@ build: drupal-install drupal-archive playground-build
 
 serve:
 	docker run --rm -p 80:80 \
+		-v ${PWD}/playground/Caddyfile:/etc/caddy/Caddyfile \
 		-v ${PWD}/playground/public:/usr/share/caddy \
 		caddy
 

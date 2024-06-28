@@ -1,11 +1,18 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Try Drupal</title>
+    <link href="styles.css" rel="stylesheet">
 </head>
 
 <body>
-    <button id="launch" onclick="initializeCodebase();">Loading...</button>
-    <button id="cleanup" onclick="cleanupCodebase();" hidden>Reset</button>
+    <main>
+        <button id="launch" onclick="initializeCodebase();" disabled>Loading...</button>
+        <button id="cleanup" onclick="cleanupCodebase();" hidden disabled>Reset</button>
+    </main>
     <script type="module">
         import { sendMessageFor, onMessage } from './msg-bus.mjs';
         import { PhpWeb } from './PhpWeb.mjs';
@@ -22,20 +29,25 @@
         serviceWorker.addEventListener('message', onMessage);
 
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('Waiting for service ...')
-            await navigator.serviceWorker.ready
             console.log('Checking for existing install...')
 
             const checkWww = await sendMessage('analyzePath', ['/persist/drupal'])
             if (checkWww.exists) {
                 document.getElementById('cleanup').hidden = false
+                document.getElementById('cleanup').disabled = false
+
                 document.getElementById('launch').innerHTML = 'Launch'
             } else {
                 document.getElementById('launch').innerHTML = 'Install'
             }
+            document.getElementById('launch').disabled = false
         });
 
         async function cleanup() {
+            document.getElementById('launch').hidden = true;
+            document.getElementById('cleanup').disabled = true;
+
+            document.getElementById('cleanup').innerHTML = 'Cleaning up...'
             const openDb = indexedDB.open("/persist", 21);
             openDb.onsuccess = event => {
                 const db = openDb.result;
@@ -44,13 +56,18 @@
                 const objectStoreRequest = objectStore.clear();
 
                 objectStoreRequest.onsuccess = (event) => {
-                    location.reload();
+                    db.close();
+                    console.log('Reloading after purging data...');
+                    document.getElementById('cleanup').innerHTML = 'Reloading...'
+                    window.location.reload();
                 };
             };
         }
 
         async function launchDrupal() {
             document.getElementById('launch').disabled = true;
+
+            await navigator.serviceWorker.getRegistration(`/worker.mjs`);
 
             const checkWww = await sendMessage('analyzePath', ['/persist/drupal'])
             if (checkWww.exists) {
@@ -95,7 +112,6 @@
 
         window.initializeCodebase = launchDrupal
         window.cleanupCodebase = cleanup
-        // setTimeout(() => navigator.serviceWorker.controller || window.location.reload(), 350);
     </script>
 </body>
 

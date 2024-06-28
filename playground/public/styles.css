@@ -1,0 +1,13 @@
+body {
+    background: #009CDE;
+}
+main {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1em;
+}
+button {
+    font-size: 2em;
+    font-family: 'Nimbus Mono PS', 'Courier New', monospace;
+}

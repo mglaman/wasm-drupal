@@ -1,17 +1,17 @@
 {
   "devDependencies": {
-    "php-cgi-wasm": "^0.0.9-alpha-2",
-    "php-wasm": "^0.0.9-alpha-13",
-    "php-wasm-dom": "^0.0.0-h",
-    "php-wasm-gd": "^0.0.9-i",
-    "php-wasm-iconv": "^0.0.9-j",
-    "php-wasm-libxml": "^0.0.0-n",
-    "php-wasm-libzip": "^0.0.9-e",
-    "php-wasm-mbstring": "^0.0.0-c",
-    "php-wasm-simplexml": "^0.0.0-j",
-    "php-wasm-sqlite": "^0.0.9-x",
-    "php-wasm-xml": "^0.0.0-i",
-    "php-wasm-zlib": "^0.0.9-f"
+    "php-cgi-wasm": "0.0.9-alpha-2",
+    "php-wasm": "0.0.9-alpha-13",
+    "php-wasm-dom": "0.0.0-h",
+    "php-wasm-gd": "0.0.9-i",
+    "php-wasm-iconv": "0.0.9-j",
+    "php-wasm-libxml": "0.0.9-q",
+    "php-wasm-libzip": "0.0.9-e",
+    "php-wasm-mbstring": "0.0.0-c",
+    "php-wasm-simplexml": "0.0.0-j",
+    "php-wasm-sqlite": "0.0.9-x",
+    "php-wasm-xml": "0.0.0-i",
+    "php-wasm-zlib": "0.0.9-f"
   },
   "scripts": {
     "postinstall": "./postinstall.sh"

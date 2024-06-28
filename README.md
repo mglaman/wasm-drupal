@@ -15,7 +15,7 @@ PHP has been compiled into Web Assembly.
 
 ## Running locally
 
-Currently this requires PHP (with Composer) on the host machine and Docker.
+Currently this requires NPM, PHP (with Composer) on the host machine and Docker.
 
 ```shell
 make build

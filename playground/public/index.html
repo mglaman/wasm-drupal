@@ -1,0 +1,79 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <button onclick="initializeCodebase();">GO!</button>
+    <button onclick="cleanupCodebase();">Delete docroot</button>
+    <script type="module">
+        import { sendMessageFor, onMessage } from './msg-bus.mjs';
+        import { PhpWeb } from './PhpWeb.mjs';
+        const sharedLibs = [`php${PhpWeb.phpVersion}-zip.so`, `php${PhpWeb.phpVersion}-zlib.so`];
+        const sendMessage = sendMessageFor((`${window.location.origin}/worker.mjs`))
+
+        const serviceWorker = navigator.serviceWorker;
+        serviceWorker.register(`/worker.mjs`, {
+            type: "module"
+        });
+        serviceWorker.addEventListener('message', event => {
+            console.log(event)
+        });
+        serviceWorker.addEventListener('message', onMessage);
+
+        async function cleanup() {
+            const openDb = indexedDB.open("/persist", 21);
+            openDb.onsuccess = event => {
+                const db = openDb.result;
+                const transaction = db.transaction(["FILE_DATA"], "readwrite");
+                const objectStore = transaction.objectStore("FILE_DATA");
+                const objectStoreRequest = objectStore.clear();
+
+                objectStoreRequest.onsuccess = (event) => {
+                    location.reload();
+                };
+            };
+        }
+
+        async function launchDrupal() {
+            const checkWww = await sendMessage('analyzePath', ['/persist/drupal'])
+            if (checkWww.exists) {
+                window.location = '/cgi/drupal'
+                return;
+            }
+
+            const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
+            await php.binary;
+            php.addEventListener('output', event => console.log(event.detail));
+            php.addEventListener('error', event => console.log(event.detail));
+
+            const checkArchive = await sendMessage('analyzePath', ['/persist/drupal.zip']);
+            if (!checkArchive.exists) {
+                const downloader = fetch('assets/drupal-wasm-1.0.zip');
+                const download = await downloader;
+                const zipContents = await download.arrayBuffer();
+
+                console.log('Unpacking files...')
+                await sendMessage('writeFile', ['/persist/drupal.zip', new Uint8Array(zipContents)]);
+
+                const initPhpCode = await (await fetch('/assets/init.php')).text();
+                console.log(await php.run(initPhpCode));
+
+                console.log('Refreshing PHP...')
+                await sendMessage('refresh', []);
+
+                console.log('Removing archive...');
+                await sendMessage('unlink', ['/persist/drupal.zip'])
+
+                console.log('Redirecting...');
+                window.location = '/cgi/drupal'
+            }
+        }
+
+        window.initializeCodebase = launchDrupal
+        window.cleanupCodebase = cleanup
+        // setTimeout(() => navigator.serviceWorker.controller || window.location.reload(), 350);
+    </script>
+</body>
+
+</html>

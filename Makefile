@@ -1,4 +1,11 @@
-build: drupal-install drupal-archive
+PWD = $(shell pwd)
+
+build: drupal-install drupal-archive playground-build
+
+serve:
+	docker run --rm -p 80:80 \
+		-v ${PWD}/playground/public:/usr/share/caddy \
+		caddy
 
 drupal-update:
 	cd drupal-src && composer update --ignore-platform-reqs
@@ -14,3 +21,10 @@ drupal-install: drupal-build
 drupal-archive:
 	cd drupal-src && composer archive --format=zip
 	mv drupal-src/drupal-wasm-1.0.zip .
+
+playground-build:
+	cp drupal-wasm-1.0.zip playground/public/assets
+	cd playground && npm install
+
+clean:
+	git clean -fdX

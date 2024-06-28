@@ -13,9 +13,45 @@ PHP has been compiled into Web Assembly.
 * The `php-wasm` package allows us to execute PHP code in the browser.
 * The `php-cgi-wasm` package allows us to execute PHP code in a service worker, which emulates CGI (think PHP-FPM), and allows serving requests to and from Drupal.
 
+## Running locally
+
+Currently this requires PHP (with Composer) on the host machine and Docker.
+
+```shell
+make build
+
+make serve
+```
+
+Open `http://localhost`
+
+Click **GO**, wait for environment to launch.
+
+Log in with
+
+* Username: admin
+* Password: admin
+
+## Debugging steps
+
+### Debuging the service worker
+
+Visit chrome://serviceworker-internals/
+
+### Resetting IndexDB
+
+1. Open developer console
+2. Under "Application" tab, go to IndexDB
+3. Delete /persist and /config
+4. Unregister service worker
+5. Refresh.
+
 ## Next steps
 
+- [ ] Better launch experience, show if already installed
+- [ ] Figure out why session is periodically lost after first run
 - [ ] Install Drupal on demand instead of using a prepared SQLite database
 - [ ] Add WebP support to GD extension [seanmorris/php-wasm#43](https://github.com/seanmorris/php-wasm/issues/43)
 - [ ] Allow exporting Drupal database to use locally, with DDEV.
 - [ ] Allow exporting Drupal codebase to use locally, with DDEV. (Without patches used to run in WASM.)
+- [ ] Use `vHosts` to have "Drupal core" and "Drupal CMS" options.

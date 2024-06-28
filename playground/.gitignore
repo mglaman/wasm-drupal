@@ -1,0 +1,15 @@
+*.zip
+/public/*.so
+/public/*.wasm
+/public/php-*
+/public/Php*
+/public/breakoutRequest.mjs
+/public/config.mjs
+/public/fsOps.mjs
+/public/msg-bus.mjs
+/public/parseResponse.mjs
+/public/resolveDependencies.mjs
+/public/webTransactions.mjs
+/public/OutputBuffer.mjs
+/public/_Event.mjs
+/node_modules

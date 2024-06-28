@@ -4,8 +4,8 @@
 </head>
 
 <body>
-    <button onclick="initializeCodebase();">GO!</button>
-    <button onclick="cleanupCodebase();">Delete docroot</button>
+    <button id="launch" onclick="initializeCodebase();">Loading...</button>
+    <button id="cleanup" onclick="cleanupCodebase();" hidden>Reset</button>
     <script type="module">
         import { sendMessageFor, onMessage } from './msg-bus.mjs';
         import { PhpWeb } from './PhpWeb.mjs';
@@ -20,6 +20,16 @@
             console.log(event)
         });
         serviceWorker.addEventListener('message', onMessage);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const checkWww = await sendMessage('analyzePath', ['/persist/drupal'])
+            if (checkWww.exists) {
+                document.getElementById('cleanup').hidden = false
+                document.getElementById('launch').innerHTML = 'Launch'
+            } else {
+                document.getElementById('launch').innerHTML = 'Install'
+            }
+        });
 
         async function cleanup() {
             const openDb = indexedDB.open("/persist", 21);
@@ -36,11 +46,16 @@
         }
 
         async function launchDrupal() {
+            document.getElementById('launch').disabled = true;
+
             const checkWww = await sendMessage('analyzePath', ['/persist/drupal'])
             if (checkWww.exists) {
+                document.getElementById('launch').innerHTML = 'Redirecting...'
                 window.location = '/cgi/drupal'
                 return;
             }
+
+            document.getElementById('launch').innerHTML = 'Installing...'
 
             const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
             await php.binary;
@@ -53,18 +68,22 @@
                 const download = await downloader;
                 const zipContents = await download.arrayBuffer();
 
+                document.getElementById('launch').innerHTML = 'Unpacking files...'
                 console.log('Unpacking files...')
                 await sendMessage('writeFile', ['/persist/drupal.zip', new Uint8Array(zipContents)]);
 
                 const initPhpCode = await (await fetch('/assets/init.php')).text();
                 console.log(await php.run(initPhpCode));
 
+                document.getElementById('launch').innerHTML = 'Refreshing PHP...'
                 console.log('Refreshing PHP...')
                 await sendMessage('refresh', []);
 
+                document.getElementById('launch').innerHTML = 'Removing archive...'
                 console.log('Removing archive...');
-                await sendMessage('unlink', ['/persist/drupal.zip'])
+                sendMessage('unlink', ['/persist/drupal.zip'])
 
+                document.getElementById('launch').innerHTML = 'Redirecting...'
                 console.log('Redirecting...');
                 window.location = '/cgi/drupal'
             }

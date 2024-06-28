@@ -1,0 +1,3 @@
+patches export-ignore
+vendor/bin export-ignore
+web/sites/default/files/php export-ignore

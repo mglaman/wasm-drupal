@@ -12,3 +12,10 @@ PHP has been compiled into Web Assembly.
 
 * The `php-wasm` package allows us to execute PHP code in the browser.
 * The `php-cgi-wasm` package allows us to execute PHP code in a service worker, which emulates CGI (think PHP-FPM), and allows serving requests to and from Drupal.
+
+## Next steps
+
+- [ ] Install Drupal on demand instead of using a prepared SQLite database
+- [ ] Add WebP support to GD extension [seanmorris/php-wasm#43](https://github.com/seanmorris/php-wasm/issues/43)
+- [ ] Allow exporting Drupal database to use locally, with DDEV.
+- [ ] Allow exporting Drupal codebase to use locally, with DDEV. (Without patches used to run in WASM.)

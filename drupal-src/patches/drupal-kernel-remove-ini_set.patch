@@ -1,0 +1,24 @@
+diff --git a/core/lib/Drupal/Core/DrupalKernel.php b/core/lib/Drupal/Core/DrupalKernel.php
+index f994cf0f0e..3670224a5e 100644
+--- a/core/lib/Drupal/Core/DrupalKernel.php
++++ b/core/lib/Drupal/Core/DrupalKernel.php
+@@ -989,14 +989,14 @@ public static function bootEnvironment($app_root = NULL) {
+     if (PHP_SAPI !== 'cli') {
+       // Use session cookies, not transparent sessions that puts the session id
+       // in the query string.
+-      ini_set('session.use_cookies', '1');
+-      ini_set('session.use_only_cookies', '1');
+-      ini_set('session.use_trans_sid', '0');
++//      ini_set('session.use_cookies', '1');
++//      ini_set('session.use_only_cookies', '1');
++//      ini_set('session.use_trans_sid', '0');
+       // Don't send HTTP headers using PHP's session handler.
+       // Send an empty string to disable the cache limiter.
+-      ini_set('session.cache_limiter', '');
++//      ini_set('session.cache_limiter', '');
+       // Use httponly session cookies.
+-      ini_set('session.cookie_httponly', '1');
++//      ini_set('session.cookie_httponly', '1');
+     }
+
+     // Set sane locale settings, to ensure consistent string, dates, times and

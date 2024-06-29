@@ -50,7 +50,6 @@ Visit chrome://serviceworker-internals/
 
 - [ ] Figure out why session is periodically lost after first run [#7](https://github.com/mglaman/wasm-drupal/issues/7)
 - [ ] Install Drupal on demand instead of using a prepared SQLite database [#8](https://github.com/mglaman/wasm-drupal/issues/8)
-- [ ] Add WebP support to GD extension [#9](https://github.com/mglaman/wasm-drupal/issues/9) [seanmorris/php-wasm#43](https://github.com/seanmorris/php-wasm/issues/43)
 - [ ] Allow exporting Drupal database to use locally, with DDEV. [#10](https://github.com/mglaman/wasm-drupal/issues/10)
 - [ ] Allow exporting Drupal codebase to use locally, with DDEV. [#11](https://github.com/mglaman/wasm-drupal/issues/11)
 - [ ] Use `vHosts` to have "Drupal core" and "Drupal CMS" options. [#12](https://github.com/mglaman/wasm-drupal/issues/12)

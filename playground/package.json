@@ -3,7 +3,7 @@
     "php-cgi-wasm": "0.0.9-alpha-2",
     "php-wasm": "0.0.9-alpha-13",
     "php-wasm-dom": "0.0.0-h",
-    "php-wasm-gd": "0.0.9-i",
+    "php-wasm-gd": "^0.0.9-j",
     "php-wasm-iconv": "0.0.9-j",
     "php-wasm-libxml": "0.0.9-q",
     "php-wasm-libzip": "0.0.9-e",

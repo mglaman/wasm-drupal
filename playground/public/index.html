@@ -55,8 +55,10 @@
                 const objectStore = transaction.objectStore("FILE_DATA");
                 const objectStoreRequest = objectStore.clear();
 
-                objectStoreRequest.onsuccess = (event) => {
+                objectStoreRequest.onsuccess = async (event) => {
                     db.close();
+                    console.log('Reloading after purging data...');
+                    await sendMessage('refresh', []);
                     console.log('Reloading after purging data...');
                     document.getElementById('cleanup').innerHTML = 'Reloading...'
                     window.location.reload();

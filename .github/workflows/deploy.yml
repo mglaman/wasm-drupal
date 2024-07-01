@@ -30,7 +30,7 @@ jobs:
           aws-region: us-east-1
       - name: Deploy
         working-directory: ./playground
-        run: aws s3 sync ./dist s3://wasm-drupal
+        run: aws s3 sync ./public s3://wasm-drupal
       - name: Invalidate CloudFront
         working-directory: ./playground
         run: aws cloudfront create-invalidation --distribution-id ENEVO72R9T6H5 --paths "/*"

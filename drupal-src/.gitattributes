@@ -65,4 +65,8 @@ core/.phpstan-baseline.php text eol=lf whitespace=blank-at-eol,-blank-at-eof,-sp
 
 patches export-ignore
 vendor/bin export-ignore
+web/core/tests/**/* export-ignore
+web/core/modules/*/tests/**/* export-ignore
+web/core/themes/*/tests/**/* export-ignore
 web/sites/default/files/php export-ignore
+web/core/assets export-ignore

@@ -29,6 +29,9 @@
         serviceWorker.addEventListener('message', onMessage);
 
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Waiting for service worker...')
+            await navigator.serviceWorker.ready;
+
             console.log('Checking for existing install...')
 
             const checkWww = await sendMessage('analyzePath', ['/persist/drupal'])

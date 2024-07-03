@@ -1,5 +1,7 @@
 {
   "devDependencies": {
+    "@rspack/cli": "^0.7.5",
+    "@rspack/core": "^0.7.5",
     "@tailwindcss/typography": "^0.5.13",
     "php-cgi-wasm": "0.0.9-alpha-2",
     "php-wasm": "0.0.9-alpha-13",
@@ -18,6 +20,7 @@
   "scripts": {
     "build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
     "watch": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
-    "postinstall": "./postinstall.sh"
+    "postinstall": "./postinstall.sh",
+    "worker-bundle": "rspack --config ./rs.config.js"
   }
 }

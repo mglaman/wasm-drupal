@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.13",
     "php-cgi-wasm": "0.0.9-alpha-2",
     "php-wasm": "0.0.9-alpha-13",
     "php-wasm-dom": "0.0.0-h",
@@ -11,9 +12,12 @@
     "php-wasm-simplexml": "0.0.0-j",
     "php-wasm-sqlite": "0.0.9-x",
     "php-wasm-xml": "0.0.0-i",
-    "php-wasm-zlib": "0.0.9-f"
+    "php-wasm-zlib": "0.0.9-f",
+    "tailwindcss": "^3.4.4"
   },
   "scripts": {
+    "build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
+    "watch": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
     "postinstall": "./postinstall.sh"
   }
 }

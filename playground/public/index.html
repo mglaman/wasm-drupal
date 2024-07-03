@@ -10,8 +10,18 @@
 
 <body>
     <main>
-        <button id="launch" onclick="initializeCodebase();" disabled>Loading...</button>
-        <button id="cleanup" onclick="cleanupCodebase();" hidden disabled>Reset</button>
+        <div class="buttons">
+            <button id="launch" onclick="initializeCodebase();" disabled>Loading...</button>
+            <button id="cleanup" onclick="cleanupCodebase();" hidden disabled>Reset</button>
+        </div>
+        <div id="notices">
+            <p>There are a few compatibility issues with browsers:</p>
+            <ul>
+                <li>Firefox does not support ECMAScript modules in service workers <a href="https://github.com/mglaman/wasm-drupal/issues/21">#21</a></li>
+                <li>Errors on Safari with php-cgi-worker and WASM <a href="https://github.com/mglaman/wasm-drupal/issues/28">#28</a></li>
+            </ul>
+            <p>Something else go wrong? <a href="https://github.com/w3c/ServiceWorker/issues/new/choose">Open an issue</a></p>
+        </div>
     </main>
     <script type="module">
         import { sendMessageFor, onMessage } from './msg-bus.mjs';
@@ -20,9 +30,15 @@
         const sendMessage = sendMessageFor((`${window.location.origin}/worker.mjs`))
 
         const serviceWorker = navigator.serviceWorker;
-        serviceWorker.register(`/worker.mjs`, {
-            type: "module"
-        });
+
+        try {
+            serviceWorker.register(`/worker.mjs`, {
+                type: "module"
+            });
+        } catch (error) {
+            alert("There was an error loading the service worker. Check known compatibility issues and your browser's developer console.")
+            console.error(error)
+        }
         serviceWorker.addEventListener('message', event => {
             console.log(event)
         });

@@ -3,11 +3,21 @@ body {
 }
 main {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     gap: 1em;
+}
+main .buttons {
+    display: flex;
+    flex-direction: row;
 }
 button {
     font-size: 2em;
     font-family: 'Nimbus Mono PS', 'Courier New', monospace;
+}
+#notices {
+    background: #fff;
+    color: #000;
+    padding: 0.5em;
 }

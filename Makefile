@@ -26,7 +26,7 @@ drupal-archive:
 playground-build:
 	cp drupal-wasm-1.0.zip playground/public/assets
 	cd playground && npm install
-	cd playground && npm build
+	cd playground && npm run build
 
 clean:
 	git clean -fdX

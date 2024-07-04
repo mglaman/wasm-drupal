@@ -12,4 +12,6 @@
 /public/webTransactions.mjs
 /public/OutputBuffer.mjs
 /public/_Event.mjs
+/public/worker.js
+/public/worker.js.map
 /node_modules

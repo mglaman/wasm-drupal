@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['"Arial, sans-serif"', ...defaultTheme.fontFamily.sans],
+        'sans': ['Arial, sans-serif', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         drupal: {

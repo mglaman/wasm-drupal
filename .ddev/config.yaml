@@ -1,18 +1,17 @@
 name: wasm-drupal
 type: php
-docroot: ""
+docroot: "playground/public"
 php_version: "8.2"
 webserver_type: nginx-fpm
 xdebug_enabled: false
 additional_hostnames: []
 additional_fqdns: []
-database:
-    type: mariadb
-    version: "10.11"
 use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
 corepack_enable: false
+omit_containers: [db]
+webimage_extra_packages: [build-essential]
 
 # Key features of DDEV's config.yaml:
 
@@ -33,8 +32,6 @@ corepack_enable: false
 # so this can break upgrades.
 
 # webimage: <docker_image>  # nginx/php docker image.
-webimage_extra_packages: [build-essential]
-
 # database:
 #   type: <dbtype> # mysql, mariadb, postgres
 #   version: <version> # database version, like "10.11" or "8.0"

@@ -15,6 +15,19 @@ PHP has been compiled into Web Assembly.
 
 ## Running locally
 
+### Docker with DDEV
+
+Using [DDEV](https://ddev.com/) you can build and run the playground locally.
+
+```sh
+ddev start
+ddev make build
+```
+
+Visit https://wasm-drupal.ddev.site
+
+### Without Docker
+
 Currently this requires NPM, PHP (with Composer) on the host machine and Docker.
 
 ```shell

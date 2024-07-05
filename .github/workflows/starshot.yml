@@ -35,4 +35,4 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Upload artifact
-        run: aws s3 cp drupal-starshot.zip s3://wasm-drupal/assets
+        run: aws s3 cp drupal-starshot.zip s3://wasm-drupal/assets/drupal-starshot.zip

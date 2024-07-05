@@ -21,13 +21,13 @@ jobs:
       - run: composer install
       - run: composer drupal:install
       - run: php vendor/bin/drush pm-uninstall big_pipe --yes
-      - run: composer archive --format=zip --file=drupal-starshot --dir=/tmp
+      - run: composer archive --format=zip --file=drupal-starshot
       - name: Upload prototype archive
         uses: actions/upload-artifact@v4
         with:
           name: starshot
           path: |
-            /tmp/drupal-starshot.zip
+            drupal-starshot.zip
       - name: "configure AWS"
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -35,4 +35,4 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Upload artifact
-        run: aws s3 sync /tmp/drupal-starshot.zip s3://wasm-drupal
+        run: aws s3 cp drupal-starshot.zip s3://wasm-drupal

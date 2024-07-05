@@ -15,16 +15,19 @@ jobs:
         with:
           coverage: "none"
           php-version: "8.3"
+      - run: |
+          curl https://raw.githubusercontent.com/mglaman/wasm-drupal/main/drupal-src/patches/.gitattributes -o gitattributes-append
+          composer config --merge --json 'extra.drupal-scaffold.file-mapping' '{"[project-root]/.gitattributes": {"append": "gitattributes-append"}}'
       - run: composer install
       - run: composer drupal:install
       - run: php vendor/bin/drush pm-uninstall big_pipe --yes
-      - run: composer archive --format=zip
+      - run: composer archive --format=zip --file=drupal-starshot
       - name: Upload prototype archive
         uses: actions/upload-artifact@v4
         with:
           name: starshot
           path: |
-            drupal-starshot-project*.zip
+            drupal-starshot.zip
       - name: "configure AWS"
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -32,4 +35,4 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Upload artifact
-        run: aws s3 sync ./drupal-starshot-project*.zip s3://wasm-drupal
+        run: aws s3 sync ./drupal-starshot.zip s3://wasm-drupal

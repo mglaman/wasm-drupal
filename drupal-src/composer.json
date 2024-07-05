@@ -45,7 +45,11 @@
             "locations": {
                 "web-root": "web/"
             },
-            "file-mapping": {"[project-root]/.gitattributes": {"append": "patches/.gitattributes"}}
+            "file-mapping": {
+                "[project-root]/.gitattributes": {
+                    "append": "patches/.gitattributes"
+                }
+            }
         },
         "installer-paths": {
             "web/core": [

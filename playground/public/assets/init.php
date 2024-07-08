@@ -24,7 +24,7 @@ if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
 
 		if($newPercent - $percent >= 0.01)
 		{
-			print $newPercent . PHP_EOL;
+			print \json_encode(['progress' => round($newPercent * 100, 2)]) . PHP_EOL;
 			$percent = $newPercent;
 		}
 	}

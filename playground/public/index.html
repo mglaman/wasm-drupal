@@ -166,7 +166,6 @@
             const flavor = event.target.dataset.flavor;
 
             const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
-            const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
 
             flavorCleanup.hidden = true;
             flavorCleanup.disabled = true;
@@ -194,7 +193,6 @@
         async function launch(event) {
             const { flavor, artifact } = event.target.dataset;
 
-            const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
             const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
 
             flavorLaunch.disabled = true;
@@ -212,7 +210,10 @@
 
             const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
             await php.binary;
-            php.addEventListener('output', event => console.log(event.detail));
+            php.addEventListener('output', function (event) {
+                const status = JSON.parse(event.detail)
+                flavorLaunch.innerHTML = `Unpacking files... ${status.progress}`
+            });
             php.addEventListener('error', event => console.log(event.detail));
 
             const checkArchive = await sendMessage('analyzePath', ['/persist/artifact.zip']);
@@ -222,6 +223,7 @@
                 await sendMessage('unlink', ['/persist/artifact.zip'])
             }
 
+            flavorLaunch.innerHTML = 'Downloading archive...'
             const downloader = fetch(`/assets/${artifact}`);
             const download = await downloader;
             const zipContents = await download.arrayBuffer();

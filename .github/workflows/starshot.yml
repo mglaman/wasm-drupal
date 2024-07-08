@@ -18,6 +18,14 @@ jobs:
       - run: |
           curl https://raw.githubusercontent.com/mglaman/wasm-drupal/main/drupal-src/patches/.gitattributes -o gitattributes-append
           composer config --merge --json 'extra.drupal-scaffold.file-mapping' '{"[project-root]/.gitattributes": {"append": "gitattributes-append"}}'
+      - run: |
+          curl -O https://raw.githubusercontent.com/mglaman/wasm-drupal/main/drupal-src/patches/drupal-kernel-remove-ini_set.patch
+          composer config --merge --json 'extra.patches.drupal/core' '{"Remove ini_set calls": "./drupal-kernel-remove-ini_set.patch"}'
+      - run: |
+          curl -O https://raw.githubusercontent.com/mglaman/wasm-drupal/main/drupal-src/patches/renderer-remove-fibers.patch
+          composer config --merge --json 'extra.patches.drupal/core' '{"Remove Fibers from Renderer": "./renderer-remove-fibers.patch"}'
+      - run: |
+          rm gitattributes-append *.patch
       - run: composer install
       - run: composer drupal:install
       - run: php vendor/bin/drush pm-uninstall big_pipe --yes

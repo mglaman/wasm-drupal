@@ -19,3 +19,4 @@ recipes export-ignore
 web/recipes export-ignore
 tests export-ignore
 web/**/*.md export-ignore
+.ddev export-ignore

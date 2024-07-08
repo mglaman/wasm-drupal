@@ -86,15 +86,12 @@
                 </div>
                 <div class="px-4 py-4 sm:px-6">
                     <button type="button"
-                        class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 cursor-not-allowed"
-                        id="launch_starshot" data-flavor="starshot" disabled>Coming soon...</button>
-                    <!--<button type="button"
                         class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                         data-launch data-flavor="starshot" data-artifact="drupal-starshot.zip"
-                        disabled>Loading...</button>-->
-                    <!--<button type="button"
+                        disabled>Loading...</button>
+                    <button type="button"
                         class="rounded-md bg-red-500 px-3.5 py-2.5 text-sm font-semibold text-drupal-black shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-400"
-                        data-cleanup data-flavor="starshot" hidden disabled>Reset</button>-->
+                        data-cleanup data-flavor="starshot" hidden disabled>Reset</button>
                 </div>
             </div>
         </div>
@@ -144,10 +141,6 @@
                     .then(checkWww => {
                         const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
                         const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
-                        // todo remove null check once starshot flavor launched.
-                        if (flavorCleanup === null || flavorLaunch === null) {
-                            return;
-                        }
 
                         if (checkWww.exists) {
                             flavorCleanup.hidden = false

@@ -24,11 +24,11 @@ jobs:
       - run: |
           curl -O https://raw.githubusercontent.com/mglaman/wasm-drupal/main/drupal-src/patches/renderer-remove-fibers.patch
           composer config --merge --json 'extra.patches.drupal/core' '{"Remove Fibers from Renderer": "./renderer-remove-fibers.patch"}'
-      - run: |
-          rm gitattributes-append *.patch
       - run: composer install
       - run: composer drupal:install
       - run: php vendor/bin/drush pm-uninstall big_pipe --yes
+      - run: |
+          rm gitattributes-append *.patch
       - run: composer archive --format=zip --file=drupal-starshot
       - name: Upload prototype archive
         uses: actions/upload-artifact@v4

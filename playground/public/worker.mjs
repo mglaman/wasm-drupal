@@ -49,6 +49,11 @@ const php = new PhpCgiWorker({
       pathPrefix: '/cgi/drupal',
       directory: '/persist/drupal/web',
       entrypoint: 'index.php',
+    },
+    {
+      pathPrefix: '/cgi/starshot',
+      directory: '/persist/starshot/web',
+      entrypoint: 'index.php',
     }
   ]
 });

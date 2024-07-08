@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full">
 
 <head>
     <meta charset="utf-8">
@@ -8,7 +8,7 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 
-<body class="bg-drupal-blue">
+<body class="bg-drupal-blue h-full">
     <main class="flex flex-col items-center mx-8 md:mx-auto gap-1 rounded-md my-4 md:max-w-screen-sm">
         <div class="rounded-md bg-yellow-50 p-4 mb-6 w-full">
             <div class="flex">
@@ -105,6 +105,7 @@
                 </svg></a>
         </div>
     </main>
+    <iframe id="remote" class="hidden w-full h-full"></iframe>
     <script type="module">
         import { sendMessageFor, onMessage } from './msg-bus.mjs';
         import { PhpWeb } from './PhpWeb.mjs';
@@ -204,7 +205,9 @@
             const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
             if (checkWww.exists) {
                 flavorLaunch.innerHTML = 'Redirecting...'
-                window.location = `/cgi/${flavor}`
+                document.querySelector('main').classList.toggle('hidden')
+                document.getElementById('remote').classList.toggle('hidden')
+                document.getElementById('remote').src = `/cgi/${flavor}`
                 return;
             }
 
@@ -245,7 +248,9 @@
 
             flavorLaunch.innerHTML = 'Redirecting...'
             console.log('Redirecting...');
-            window.location = `/cgi/${flavor}`
+            document.querySelector('main').classList.toggle('hidden')
+            document.getElementById('remote').classList.toggle('hidden')
+            document.getElementById('remote').src = `/cgi/${flavor}`
         }
     </script>
 </body>

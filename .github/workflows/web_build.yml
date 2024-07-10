@@ -1,12 +1,6 @@
 name: Web build
 on:
   workflow_call:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/web_build.yml'
-      - 'playground/**'
   pull_request:
     branches:
       - main

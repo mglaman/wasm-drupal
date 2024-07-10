@@ -1,12 +1,6 @@
 name: Drupal build
 on:
   workflow_call:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/drupal_build.yml'
-      - 'drupal-src/**'
   pull_request:
     branches:
       - main

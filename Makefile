@@ -1,6 +1,6 @@
 PWD = $(shell pwd)
 
-build: drupal-install drupal-archive playground-build
+build: drupal-install drupal-archive playground-build copy-playground-archive
 
 serve:
 	docker run --rm -p 80:80 \
@@ -23,8 +23,10 @@ drupal-archive:
 	cd drupal-src && composer archive --format=zip
 	mv drupal-src/drupal-wasm-1.0.zip .
 
-playground-build:
+copy-playground-archive:
 	cp drupal-wasm-1.0.zip playground/public/assets
+
+playground-build:
 	cd playground && npm install
 	cd playground && npm run build
 

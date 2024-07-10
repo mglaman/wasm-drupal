@@ -108,7 +108,14 @@
                 </svg></a>
         </div>
     </main>
-    <iframe id="remote" class="hidden w-full h-full"></iframe>
+    <div id="remote_wrapper" class="hidden w-full h-full flex flex-col mx-0 my-auto overflow">
+        <div>
+            header
+        </div>
+        <div class="flex flex-grow bg-white">
+            <iframe id="remote" class="w-full h-full"></iframe>
+        </div>
+    </div>
     <script type="module">
         import { sendMessageFor, onMessage } from './msg-bus.mjs';
         import { PhpWeb } from './PhpWeb.mjs';
@@ -164,6 +171,13 @@
             document.querySelectorAll('[data-cleanup]').forEach(el => {
                 el.addEventListener('click', cleanup)
             })
+
+            function remoteLoaded() {
+                document.querySelector('main').classList.toggle('hidden')
+                document.getElementById('remote_wrapper').classList.toggle('hidden')
+                document.getElementById('remote').removeEventListener('load', remoteLoaded)
+            }
+            document.getElementById('remote').addEventListener('load', remoteLoaded)
         });
 
         async function cleanup() {
@@ -208,8 +222,7 @@
             const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
             if (checkWww.exists) {
                 flavorLaunch.innerHTML = 'Redirecting...'
-                document.querySelector('main').classList.toggle('hidden')
-                document.getElementById('remote').classList.toggle('hidden')
+                console.log('Redirecting...');
                 document.getElementById('remote').src = `/cgi/${flavor}`
                 return;
             }
@@ -251,8 +264,6 @@
 
             flavorLaunch.innerHTML = 'Redirecting...'
             console.log('Redirecting...');
-            document.querySelector('main').classList.toggle('hidden')
-            document.getElementById('remote').classList.toggle('hidden')
             document.getElementById('remote').src = `/cgi/${flavor}`
         }
     </script>

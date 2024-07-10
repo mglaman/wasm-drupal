@@ -1,0 +1,27 @@
+name: Web build
+on:
+  workflow_call:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/web_build.yml'
+      - 'playground/**'
+jobs:
+  web_build:
+    name: "Build artifact"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Install Node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: "build"
+        run: make playground-build
+      - name: Upload playground archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: playground
+          path: playground/public

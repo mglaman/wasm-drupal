@@ -3,25 +3,23 @@ on:
   push:
     branches:
       - main
-concurrency: deploy
+    paths:
+      - '.github/workflows/web_build.yml'
+      - '.github/workflows/web_deploy.yml'
+      - 'playground/**'
+concurrency: web_deploy
 jobs:
   build:
+    uses: ./.github/workflows/web_build.yml
+  deploy:
     name: "Build & deploy"
     runs-on: "ubuntu-latest"
+    needs: [build]
     steps:
-      - name: "Checkout"
-        uses: actions/checkout@v4
-      - name: "Install Node"
-        uses: actions/setup-node@v4
+      - name: Download Drupal artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: "22"
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
-        with:
-          coverage: "none"
-          php-version: "8.3"
-      - name: "build"
-        run: make build
+          name: playground
       - name: "configure AWS"
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -29,8 +27,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Deploy
-        working-directory: ./playground
-        run: aws s3 sync ./public s3://wasm-drupal
+        run: aws s3 sync ./playground s3://wasm-drupal
       - name: Invalidate CloudFront
-        working-directory: ./playground
         run: aws cloudfront create-invalidation --distribution-id ENEVO72R9T6H5 --paths "/*"

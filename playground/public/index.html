@@ -264,6 +264,8 @@
         }
 
         async function exportDb(event) {
+            event.target.disabled = true
+            alert('This will download the SQLite database from your instance.')
             const { flavor } = event.target.dataset;
 
             const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
@@ -284,6 +286,7 @@
             link.download = 'drupal.db'
             link.click();
             URL.revokeObjectURL(link.href);
+            event.target.disabled = false
         }
     </script>
 </body>

@@ -175,27 +175,7 @@
                 el.addEventListener('click', cleanup)
             })
             document.querySelectorAll('[data-export-db]').forEach(el => {
-                el.addEventListener('click', async event => {
-                    const flavor = event.target.dataset.flavor;
-
-                    const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
-                    await php.binary;
-
-                    let filePath
-                    php.addEventListener('output', event => filePath = event.detail[0]);
-                    php.addEventListener('error', event => console.log(event.detail));
-
-                    await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
-
-                    const exportDbPhpCode = await (await fetch('/assets/export-db.php')).text();
-                    await php.run(exportDbPhpCode)
-
-                    const dbContents = await sendMessage('readFile', [filePath]);
-                    const blob = new Blob([dbContents], {type:'application/x-sqlite3'})
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.click();
-                })
+                el.addEventListener('click', exportDb)
             })
         });
 
@@ -281,6 +261,29 @@
             flavorLaunch.innerHTML = 'Redirecting...'
             console.log('Redirecting...');
             window.location = `/cgi/${flavor}`
+        }
+
+        async function exportDb(event) {
+            const { flavor } = event.target.dataset;
+
+            const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
+            await php.binary;
+
+            let filePath
+            php.addEventListener('output', event => filePath = event.detail[0]);
+
+            await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
+
+            const exportDbPhpCode = await (await fetch('/assets/export-db.php')).text();
+            await php.run(exportDbPhpCode)
+
+            const dbContents = await sendMessage('readFile', [filePath]);
+            const blob = new Blob([dbContents], {type: 'application/vnd.sqlite3'})
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'drupal.db'
+            link.click();
+            URL.revokeObjectURL(link.href);
         }
     </script>
 </body>

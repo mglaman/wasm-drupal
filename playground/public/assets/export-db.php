@@ -26,7 +26,7 @@ $sql .= 'BEGIN TRANSACTION;' . PHP_EOL;
 $database = \Drupal::database();
 $tables = $database->query('SELECT [name], [sql] FROM {sqlite_master} WHERE [type] = "table" AND [name] NOT LIKE "sqlite_%" ORDER BY name');
 foreach ($tables as $table) {
-    $sql .= $table->sql . PHP_EOL;
+    $sql .= str_replace('CREATE TABLE ', 'CREATE TABLE IF NOT EXISTS ', $table->sql) . PHP_EOL;
 
     $columns = array_map(
         fn (object $row) => "`{$row->name}`",

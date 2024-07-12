@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\DrupalKernel;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -19,6 +20,12 @@ $kernel = DrupalKernel::createFromRequest($request, $autoloader, 'prod');
 chdir($kernel->getAppRoot());
 $kernel->boot();
 
+foreach (Cache::getBins() as $cache_backend) {
+    $cache_backend->deleteAll();
+}
+\Drupal::service('plugin.cache_clearer')->clearCachedDefinitions();
+$kernel->invalidateContainer();
+
 $sql = 'PRAGMA foreign_keys=OFF;' . PHP_EOL;
 $sql .= 'BEGIN TRANSACTION;' . PHP_EOL;
 
@@ -26,24 +33,54 @@ $sql .= 'BEGIN TRANSACTION;' . PHP_EOL;
 $database = \Drupal::database();
 $tables = $database->query('SELECT [name], [sql] FROM {sqlite_master} WHERE [type] = "table" AND [name] NOT LIKE "sqlite_%" ORDER BY name');
 foreach ($tables as $table) {
-    $sql .= str_replace('CREATE TABLE ', 'CREATE TABLE IF NOT EXISTS ', $table->sql) . PHP_EOL;
+    $sql .= str_replace('CREATE TABLE ', 'CREATE TABLE IF NOT EXISTS ', $table->sql) . ';' . PHP_EOL;
 
     $columns = array_map(
-        fn (object $row) => "`{$row->name}`",
+        static fn (object $row) => "`{$row->name}`",
         $database->query("PRAGMA table_info({$table->name})")->fetchAll()
     );
     $columns = implode(', ', $columns);
     $sql .= PHP_EOL;
 
     $rows = $database->select($table->name)->fields($table->name)->execute()->fetchAll(\PDO::FETCH_ASSOC);
-    $sql .= "INSERT INTO {$table->name} ($columns) VALUES" . PHP_EOL;
-    if (count($rows) > 0) {
-        $last_row = implode(', ', array_pop($rows));
-        foreach ($rows as $row) {
-            $values = implode(', ', array_values($row));
-            $sql .= "($values),";
-        }
-        $sql .= "($last_row);";
+    foreach ($rows as $row) {
+        $values = implode(
+            ', ',
+            array: array_map(
+                static function ($value) {
+                    if ($value === NULL) {
+                        return 'NULL';
+                    }
+                    if ($value === '') {
+                        return  "''";
+                    }
+                    if (is_numeric($value)) {
+                        return $value;
+                    }
+                    if (is_string($value)) {
+                        // @todo: this str_contains isn't working correctly
+                        if (str_contains(PHP_EOL, $value)) {
+                            $value = str_replace([PHP_EOL, "\r", "\n", "\r\n"], "\\n", $value);
+                            $value = "replace($value,'\\n',char(10))";
+                        }
+                        $value = str_replace(
+                            [
+                                "'",
+                                // TODO there is a null byte in serialized code, replacing it breaks unserialize what is sqlite3 .dump doing?
+                                chr(0)],
+                            [
+                                "''",
+                                ''
+                            ], $value
+                        );
+                        return "'$value'";
+                    }
+                    return $value;
+                },
+                array_values($row)
+            )
+        );
+        $sql .= "INSERT INTO {$table->name} VALUES($values);" . PHP_EOL;
     }
 
     $sql .= PHP_EOL;
@@ -57,9 +94,14 @@ foreach ($sequences as $sequence) {
 
 $indexes = $database->query('SELECT [sql] FROM {sqlite_master} WHERE [type] = "index" AND [name] NOT LIKE "sqlite_%" ORDER BY name');
 foreach ($indexes as $index) {
-    $sql .= $index->sql . PHP_EOL;
+    $sql .= $index->sql . ';' . PHP_EOL;
 }
 
+
 $sql .= 'COMMIT;' . PHP_EOL;
+
+// TODO support this collation somehow
+// see https://www.drupal.org/project/drupal/issues/3036487
+$sql = str_replace('NOCASE_UTF8', 'NOCASE', $sql);
 
 file_put_contents('/persist/dump.sql', $sql);

@@ -57,23 +57,19 @@ foreach ($tables as $table) {
                     if (is_numeric($value)) {
                         return $value;
                     }
-                    if (is_string($value)) {
-                        // @todo: this str_contains isn't working correctly
-                        if (str_contains(PHP_EOL, $value)) {
-                            $value = str_replace([PHP_EOL, "\r", "\n", "\r\n"], "\\n", $value);
-                            $value = "replace($value,'\\n',char(10))";
-                        }
-                        $value = str_replace(
-                            [
-                                "'",
-                                // TODO there is a null byte in serialized code, replacing it breaks unserialize what is sqlite3 .dump doing?
-                                chr(0)],
-                            [
-                                "''",
-                                ''
-                            ], $value
+                    if ($value === 'b:0;') {
+                        return false;
+                    }
+                    $is_serialized = $value[1] === ':' && str_ends_with($value, '}');
+
+                    $value = str_replace(["'"], ["''"], $value);
+                    $value = "'$value'";
+
+                    if ($is_serialized) {
+                        $value = sprintf(
+                            "replace(%s, char(1), char(0))",
+                            str_replace(chr(0), chr(1), $value),
                         );
-                        return "'$value'";
                     }
                     return $value;
                 },

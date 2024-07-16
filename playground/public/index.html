@@ -165,11 +165,13 @@
             })
         });
 
-        async function cleanup() {
-            const flavor = event.target.dataset.flavor;
+        async function cleanup(event ) {
+            if (!window.confirm("Your site's data will be completely removed, do you want to continue?")) {
+                return;
+            }
+            const { flavor } = event.target.dataset;
 
             const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
-            const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
 
             flavorCleanup.hidden = true;
             flavorCleanup.disabled = true;

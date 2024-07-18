@@ -103,7 +103,6 @@
         },
         "patches": {
             "drupal/core": {
-                "Remove ini_set calls": "./patches/drupal-kernel-remove-ini_set.patch",
                 "Remove Fibers from Renderer": "./patches/renderer-remove-fibers.patch"
             }
         }

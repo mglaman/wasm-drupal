@@ -76,6 +76,10 @@
                         data-launch data-flavor="drupal" data-artifact="drupal-wasm-1.0.zip"
                         disabled>Loading...</button>
                     <button type="button"
+                            class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                            data-export-db data-flavor="drupal"
+                            hidden disabled>Export DB</button>
+                    <button type="button"
                         class="rounded-md bg-red-500 px-3.5 py-2.5 text-sm font-semibold text-drupal-black shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-400"
                         data-cleanup data-flavor="drupal" hidden disabled>Reset</button>
                 </div>
@@ -92,6 +96,10 @@
                         class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                         data-launch data-flavor="starshot" data-artifact="drupal-starshot.zip"
                         disabled>Loading...</button>
+                    <button type="button"
+                            class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                            data-export-db data-flavor="starshot"
+                            hidden disabled>Export DB</button>
                     <button type="button"
                         class="rounded-md bg-red-500 px-3.5 py-2.5 text-sm font-semibold text-drupal-black shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-400"
                         data-cleanup data-flavor="starshot" hidden disabled>Reset</button>
@@ -144,10 +152,13 @@
                     .then(checkWww => {
                         const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
                         const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
+                        const flavorExportDb = document.querySelector(`[data-export-db][data-flavor="${flavor}"]`)
 
                         if (checkWww.exists) {
                             flavorCleanup.hidden = false
                             flavorCleanup.disabled = false
+                            flavorExportDb.hidden = false
+                            flavorExportDb.disabled = false
 
                             flavorLaunch.innerHTML = 'Launch'
                         } else {
@@ -162,6 +173,9 @@
             })
             document.querySelectorAll('[data-cleanup]').forEach(el => {
                 el.addEventListener('click', cleanup)
+            })
+            document.querySelectorAll('[data-export-db]').forEach(el => {
+                el.addEventListener('click', exportDb)
             })
         });
 
@@ -178,14 +192,14 @@
 
             flavorCleanup.innerHTML = 'Cleaning up...'
             const openDb = indexedDB.open("/persist", 21);
-            openDb.onsuccess = event => {
+            openDb.onsuccess = () => {
                 const db = openDb.result;
                 const transaction = db.transaction(["FILE_DATA"], "readwrite");
                 const objectStore = transaction.objectStore("FILE_DATA");
                 // IDBKeyRange.bound trick found at https://stackoverflow.com/a/76714057/1949744
                 const objectStoreRequest = objectStore.delete(IDBKeyRange.bound(`/persist/${flavor}`, `/persist/${flavor}/\uffff`));
 
-                objectStoreRequest.onsuccess = async (event) => {
+                objectStoreRequest.onsuccess = async () => {
                     db.close();
                     console.log('Reloading after purging data...');
                     await sendMessage('refresh', []);
@@ -199,7 +213,6 @@
         async function launch(event) {
             const { flavor, artifact } = event.target.dataset;
 
-            const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
             const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
 
             flavorLaunch.disabled = true;
@@ -215,7 +228,10 @@
 
             flavorLaunch.innerHTML = 'Installing...'
 
-            const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
+            const php = new PhpWeb({
+                sharedLibs: [`php${PhpWeb.phpVersion}-zip.so`, `php${PhpWeb.phpVersion}-zlib.so`],
+                persist: [{mountPath: '/persist'}, {mountPath: '/config'}]
+            });
             await php.binary;
             php.addEventListener('output', event => console.log(event.detail));
             php.addEventListener('error', event => console.log(event.detail));
@@ -251,6 +267,35 @@
             flavorLaunch.innerHTML = 'Redirecting...'
             console.log('Redirecting...');
             window.location = `/cgi/${flavor}`
+        }
+
+        async function exportDb(event) {
+            event.target.disabled = true
+            alert('This will download a SQL database dump from your instance.')
+            const { flavor } = event.target.dataset;
+
+            const php = new PhpWeb({
+                sharedLibs: [`php${PhpWeb.phpVersion}-sqlite.so`, `php${PhpWeb.phpVersion}-pdo-sqlite.so`,],
+                persist: [{mountPath: '/persist'}, {mountPath: '/config'}]
+            });
+            await php.binary;
+
+            php.addEventListener('output', event => console.log(event.detail));
+
+            await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
+
+            const exportDbPhpCode = await (await fetch('/assets/export-db.php')).text();
+            await php.run(exportDbPhpCode)
+
+            const dbContents = await sendMessage('readFile', ['/persist/dump.sql']);
+            const blob = new Blob([dbContents], {type: 'application/sql'})
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'drupal.sql'
+            link.click();
+            URL.revokeObjectURL(link.href);
+            event.target.disabled = false
+            setTimeout(() => sendMessage('unlink', ['/persist/dump.sql']), 0);
         }
     </script>
 </body>

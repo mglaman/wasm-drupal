@@ -1,6 +1,6 @@
-import {registerDrupalCgiWorker} from "./drupal-cgi-worker.mjs";
+import {registerWorker} from "./drupal-cgi-worker.mjs";
 
-registerDrupalCgiWorker(
+registerWorker(
     self,
     '/cgi/',
     '/persist/www',

@@ -51,7 +51,7 @@ export class DrupalCgiWorker extends PhpCgiWorker {
     }
 }
 
-export function registerDrupalCgiWorker(worker, prefix, docroot, vHosts = []) {
+export function registerWorker(worker, prefix, docroot, vHosts = []) {
     const php = new DrupalCgiWorker({ prefix, docroot, vHosts })
     worker.addEventListener('install',  event => php.handleInstallEvent(event));
     worker.addEventListener('activate', event => php.handleActivateEvent(event));

@@ -45,6 +45,10 @@ Log in with
 * Username: admin
 * Password: admin
 
+## Upcoming: drupal-cgi-worker package
+
+The goal is to split out the JavaScript from this project into a reusable package for others.
+
 ## Debugging steps
 
 ### Debuging the service worker

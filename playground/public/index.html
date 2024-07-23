@@ -34,9 +34,9 @@
         <div class="grid md:grid-cols-2 gap-6">
             <div class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-drupal-white shadow flex flex-col">
                 <div class="px-4 py-5 sm:p-6 flex-grow flex items-center justify-center">
-                    <svg version="1.1" id="Group_38" xmlns="http://www.w3.org/2000/svg"
-                        xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" class="w-44"
-                        viewBox="0 0 313.7 291.7" style="enable-background:new 0 0 313.7 291.7;" xml:space="preserve">
+                    <svg id="Group_38" xmlns="http://www.w3.org/2000/svg"
+                         x="0px" y="0px" class="w-44"
+                         viewBox="0 0 313.7 291.7" xml:space="preserve">
                         <style type="text/css">
                             .st0 {
                                 fill: #009CDE;
@@ -120,7 +120,7 @@
         serviceWorker.register(`/worker.mjs`, {
             type: "module"
         })
-            .catch(error => {
+            .catch(() => {
                 console.log('Browser did not support ES modules in service worker, trying bundled service worker...')
                 serviceWorker.register(`/worker.js`)
                     .catch(error => {
@@ -178,14 +178,14 @@
 
             flavorCleanup.innerHTML = 'Cleaning up...'
             const openDb = indexedDB.open("/persist", 21);
-            openDb.onsuccess = event => {
+            openDb.onsuccess = () => {
                 const db = openDb.result;
                 const transaction = db.transaction(["FILE_DATA"], "readwrite");
                 const objectStore = transaction.objectStore("FILE_DATA");
                 // IDBKeyRange.bound trick found at https://stackoverflow.com/a/76714057/1949744
                 const objectStoreRequest = objectStore.delete(IDBKeyRange.bound(`/persist/${flavor}`, `/persist/${flavor}/\uffff`));
 
-                objectStoreRequest.onsuccess = async (event) => {
+                objectStoreRequest.onsuccess = async () => {
                     db.close();
                     console.log('Reloading after purging data...');
                     await sendMessage('refresh', []);
@@ -199,7 +199,6 @@
         async function launch(event) {
             const { flavor, artifact } = event.target.dataset;
 
-            const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
             const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
 
             flavorLaunch.disabled = true;
@@ -213,7 +212,7 @@
                 return;
             }
 
-            flavorLaunch.innerHTML = 'Installing...'
+            flavorLaunch.innerHTML = 'Preparing...'
 
             const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
             await php.binary;
@@ -227,16 +226,18 @@
                 await sendMessage('unlink', ['/persist/artifact.zip'])
             }
 
+            flavorLaunch.innerHTML = 'Downloading artifact...'
+            console.log('Downloading artifact...')
             const downloader = fetch(`/assets/${artifact}`);
             const download = await downloader;
             const zipContents = await download.arrayBuffer();
 
             flavorLaunch.innerHTML = 'Unpacking files...'
-            console.log('Unpacking files...')
+            console.log('Writing archive contents...')
+            await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
             await sendMessage('writeFile', ['/persist/artifact.zip', new Uint8Array(zipContents)]);
 
-            await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
-
+            console.log('Extracting archive...')
             const initPhpCode = await (await fetch('/assets/init.php')).text();
             console.log(await php.run(initPhpCode));
 

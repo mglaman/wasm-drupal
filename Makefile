@@ -20,11 +20,11 @@ drupal-install: drupal-build
 		php vendor/bin/drush pm-uninstall big_pipe --yes
 
 drupal-archive:
-	cd drupal-src && composer archive --format=zip
-	mv drupal-src/drupal-wasm-1.0.zip .
+	cd drupal-src && composer archive --format=zip --file=drupal
+	mv drupal-src/drupal.zip .
 
 copy-playground-archive:
-	cp drupal-wasm-1.0.zip playground/public/assets
+	cp drupal.zip playground/public/assets
 
 playground-build:
 	cd playground && npm install

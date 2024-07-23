@@ -25,4 +25,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: drupal-artifact
-          path: drupal-wasm-1.0.zip
+          path: drupal.zip

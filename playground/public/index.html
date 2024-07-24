@@ -213,12 +213,6 @@
             }
 
             flavorLaunch.innerHTML = 'Preparing...'
-
-            const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
-            await php.binary;
-            php.addEventListener('output', event => console.log(event.detail));
-            php.addEventListener('error', event => console.log(event.detail));
-
             const checkArchive = await sendMessage('analyzePath', ['/persist/artifact.zip']);
             if (checkArchive.exists) {
                 flavorLaunch.innerHTML = 'Removing existing archive...'
@@ -229,29 +223,43 @@
             flavorLaunch.innerHTML = 'Downloading artifact...'
             console.log('Downloading artifact...')
             const downloader = fetch(`/assets/${artifact}`);
-            const download = await downloader;
-            const zipContents = await download.arrayBuffer();
 
-            flavorLaunch.innerHTML = 'Unpacking files...'
-            console.log('Writing archive contents...')
-            await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
-            await sendMessage('writeFile', ['/persist/artifact.zip', new Uint8Array(zipContents)]);
+            await navigator.locks.request('install', async () => {
+                const download = await downloader;
+                const zipContents = await download.arrayBuffer();
 
-            console.log('Extracting archive...')
-            const initPhpCode = await (await fetch('/assets/init.php')).text();
-            console.log(await php.run(initPhpCode));
+                flavorLaunch.innerHTML = 'Unpacking files...'
+                console.log('Writing archive contents...')
+                await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
+                await sendMessage('writeFile', ['/persist/artifact.zip', new Uint8Array(zipContents)]);
 
-            flavorLaunch.innerHTML = 'Refreshing PHP...'
-            console.log('Refreshing PHP...')
-            await sendMessage('refresh', []);
+                console.log('Extracting archive...')
+                console.log(new TextDecoder().decode(await sendMessage('readFile', ['/config/flavor.txt'])))
 
-            flavorLaunch.innerHTML = 'Removing archive...'
-            console.log('Removing archive...');
-            sendMessage('unlink', ['/persist/artifact.zip'])
+                const initPhpCode = fetch('/assets/init.php');
 
-            flavorLaunch.innerHTML = 'Redirecting...'
-            console.log('Redirecting...');
-            window.location = `/cgi/${flavor}`
+                const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
+                php.addEventListener('output', event => console.log(event.detail));
+                php.addEventListener('error', event => console.log(event.detail));
+                await php.binary;
+
+                console.log(new TextDecoder().decode(await sendMessage('readFile', [])))
+
+                const exitCode = await php.run(await (await initPhpCode).text());
+                console.log(exitCode)
+
+                flavorLaunch.innerHTML = 'Refreshing PHP...'
+                console.log('Refreshing PHP...')
+                await sendMessage('refresh', []);
+
+                flavorLaunch.innerHTML = 'Removing archive...'
+                console.log('Removing archive...');
+                sendMessage('unlink', ['/persist/artifact.zip'])
+
+                flavorLaunch.innerHTML = 'Redirecting...'
+                console.log('Redirecting...');
+                window.location = `/cgi/${flavor}`
+            });
         }
     </script>
 </body>

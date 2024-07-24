@@ -7,15 +7,21 @@ set_error_handler(function(...$args) use($stdErr, &$errors){
 });
 
 $flavor = file_get_contents('/config/flavor.txt');
-unlink('/config/flavor.txt');
+//unlink('/config/flavor.txt');
 
 $docroot = '/persist/' . $flavor;
 
 $zip = new ZipArchive;
 
+if (!file_exists('/persist/artifact.zip')) {
+    print "artifact could not be found" . PHP_EOL;
+    exit(1);
+}
+
 if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
 {
 	$total = $zip->count();
+    print "total files: $total" . PHP_EOL;
 	$percent = 0;
 	for($i = 0; $i < $total; $i++)
 	{
@@ -29,5 +35,9 @@ if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
 		}
 	}
 }
+else {
+    print "could not open artifact archive" . PHP_EOL;
+    exit(1);
+}
 
-exit;
+exit(0);

@@ -1,6 +1,6 @@
 PWD = $(shell pwd)
 
-build: drupal-install drupal-archive playground-build copy-playground-archive
+build: drupal-archive playground-build copy-playground-archive
 
 serve:
 	docker run --rm -p 80:80 \
@@ -14,12 +14,7 @@ drupal-update:
 drupal-build:
 	cd drupal-src && composer install --ignore-platform-reqs
 
-drupal-install: drupal-build
-	cd drupal-src && \
-		php vendor/bin/drush site:install --account-pass=admin --yes --site-name="Drupal WASM" && \
-		php vendor/bin/drush pm-uninstall big_pipe --yes
-
-drupal-archive:
+drupal-archive: drupal-build
 	cd drupal-src && composer archive --format=zip
 	mv drupal-src/drupal-wasm-1.0.zip .
 

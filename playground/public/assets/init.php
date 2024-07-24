@@ -7,13 +7,13 @@ set_error_handler(function(...$args) use($stdErr, &$errors){
 });
 
 $flavor = file_get_contents('/config/flavor.txt');
-unlink('/config/flavor.txt');
 
 $docroot = '/persist/' . $flavor;
 
 $zip = new ZipArchive;
 
 if (!file_exists('/persist/artifact.zip')) {
+    // todo convert to JSON output
     print "artifact could not be found" . PHP_EOL;
     exit(1);
 }
@@ -21,7 +21,6 @@ if (!file_exists('/persist/artifact.zip')) {
 if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
 {
 	$total = $zip->count();
-    print "total files: $total" . PHP_EOL;
 	$percent = 0;
 	for($i = 0; $i < $total; $i++)
 	{
@@ -30,12 +29,15 @@ if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
 
 		if($newPercent - $percent >= 0.01)
 		{
-			print $newPercent . PHP_EOL;
+			print json_encode([
+                'message' => 'Unpacking files ' . round($newPercent * 100, 2) . '%'
+                ]) . PHP_EOL;
 			$percent = $newPercent;
 		}
 	}
 }
 else {
+    // todo convert to JSON output
     print "could not open artifact archive" . PHP_EOL;
     exit(1);
 }

@@ -7,7 +7,7 @@ set_error_handler(function(...$args) use($stdErr, &$errors){
 });
 
 $flavor = file_get_contents('/config/flavor.txt');
-//unlink('/config/flavor.txt');
+unlink('/config/flavor.txt');
 
 $docroot = '/persist/' . $flavor;
 

@@ -20,7 +20,7 @@ jobs:
           coverage: "none"
           php-version: "8.3"
       - name: "build"
-        run: make drupal-install drupal-archive
+        run: make drupal-archive
       - name: Upload artifact archive
         uses: actions/upload-artifact@v4
         with:

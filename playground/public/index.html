@@ -234,17 +234,16 @@
                 await sendMessage('writeFile', ['/persist/artifact.zip', new Uint8Array(zipContents)]);
 
                 console.log('Extracting archive...')
-                console.log(new TextDecoder().decode(await sendMessage('readFile', ['/config/flavor.txt'])))
-
+                console.log('fetching init code')
                 const initPhpCode = fetch('/assets/init.php');
 
+                console.log('booting PhpWeb')
                 const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
                 php.addEventListener('output', event => console.log(event.detail));
                 php.addEventListener('error', event => console.log(event.detail));
                 await php.binary;
 
-                console.log(new TextDecoder().decode(await sendMessage('readFile', [])))
-
+                console.log('running init code')
                 const exitCode = await php.run(await (await initPhpCode).text());
                 console.log(exitCode)
 

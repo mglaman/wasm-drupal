@@ -26,4 +26,4 @@ playground-build:
 	cd playground && npm run build
 
 clean:
-	git clean -fdX
+	git clean -fdx

@@ -167,9 +167,6 @@
             console.log('Waiting for service worker')
             await navigator.serviceWorker.ready;
 
-            console.log('Refreshing PHP')
-            await sendMessage('refresh', []);
-
             console.log('Checking for existing installs')
             flavors.forEach(flavor => {
                 console.log(`Checking ${flavor}`)

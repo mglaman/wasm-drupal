@@ -103,7 +103,9 @@
         },
         "patches": {
             "drupal/core": {
-                "Remove Fibers from Renderer": "./patches/renderer-remove-fibers.patch"
+                "Remove Fibers from Renderer": "./patches/renderer-remove-fibers.patch",
+                "Remove BigPipe from Umami Demo": "./patches/demo_umami-remove-big_pipe.patch",
+                "Remove BigPipe from Standard": "./patches/standard-remove-big_pipe.patch"
             }
         }
     }

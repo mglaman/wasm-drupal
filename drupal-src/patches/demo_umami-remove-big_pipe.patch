@@ -1,0 +1,12 @@
+diff --git a/core/profiles/demo_umami/demo_umami.info.yml b/core/profiles/demo_umami/demo_umami.info.yml
+index 407380d564..a13c6252be 100644
+--- a/core/profiles/demo_umami/demo_umami.info.yml
++++ b/core/profiles/demo_umami/demo_umami.info.yml
+@@ -5,7 +5,6 @@ version: VERSION
+ install:
+   - node
+   - history
+-  - big_pipe
+   - block
+   - breakpoint
+   - ckeditor5

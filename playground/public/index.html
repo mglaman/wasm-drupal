@@ -113,7 +113,19 @@
     <script type="module">
         import { sendMessageFor, onMessage } from './msg-bus.mjs';
         import { PhpWeb } from './PhpWeb.mjs';
-        const sharedLibs = [`php${PhpWeb.phpVersion}-zip.so`, `php${PhpWeb.phpVersion}-zlib.so`];
+
+        const sharedLibs = [
+            `php${PhpWeb.phpVersion}-zip.so`,
+            `php${PhpWeb.phpVersion}-zlib.so`,
+            `php${PhpWeb.phpVersion}-iconv.so`,
+            `php${PhpWeb.phpVersion}-gd.so`,
+            `php${PhpWeb.phpVersion}-dom.so`,
+            `php${PhpWeb.phpVersion}-mbstring.so`,
+            `php${PhpWeb.phpVersion}-sqlite.so`,
+            `php${PhpWeb.phpVersion}-pdo-sqlite.so`,
+            `php${PhpWeb.phpVersion}-xml.so`,
+            `php${PhpWeb.phpVersion}-simplexml.so`,
+        ];
         const sendMessage = sendMessageFor((`${window.location.origin}/worker.mjs`))
         const flavors = ['drupal', 'starshot']
 
@@ -200,60 +212,80 @@
 
         async function launch(event) {
             const { flavor, artifact } = event.target.dataset;
-
-            const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
-
-            flavorLaunch.disabled = true;
+            this.disabled = true;
 
             await navigator.serviceWorker.getRegistration(`/worker.mjs`);
 
             const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
             if (checkWww.exists) {
-                flavorLaunch.innerHTML = 'Redirecting...'
+                this.innerHTML = 'Redirecting...'
                 window.location = `/cgi/${flavor}`
                 return;
             }
 
-            flavorLaunch.innerHTML = 'Preparing...'
-
-            const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
-            await php.binary;
-            php.addEventListener('output', event => console.log(event.detail));
-            php.addEventListener('error', event => console.log(event.detail));
-
+            this.innerHTML = 'Preparing...'
             const checkArchive = await sendMessage('analyzePath', ['/persist/artifact.zip']);
             if (checkArchive.exists) {
-                flavorLaunch.innerHTML = 'Removing existing archive...'
+                this.innerHTML = 'Removing existing archive...'
                 console.log('Removing archive...');
                 await sendMessage('unlink', ['/persist/artifact.zip'])
             }
 
-            flavorLaunch.innerHTML = 'Downloading artifact...'
+            this.innerHTML = 'Downloading artifact...'
             console.log('Downloading artifact...')
             const downloader = fetch(`/assets/${artifact}`);
-            const download = await downloader;
-            const zipContents = await download.arrayBuffer();
 
-            flavorLaunch.innerHTML = 'Unpacking files...'
-            console.log('Writing archive contents...')
-            await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
-            await sendMessage('writeFile', ['/persist/artifact.zip', new Uint8Array(zipContents)]);
+            await navigator.locks.request('install', async () => {
+                const download = await downloader;
+                const zipContents = await download.arrayBuffer();
 
-            console.log('Extracting archive...')
-            const initPhpCode = await (await fetch('/assets/init.php')).text();
-            console.log(await php.run(initPhpCode));
+                this.innerHTML = 'Unpacking files...'
+                console.log('Writing archive contents...')
+                await sendMessage('writeFile', ['/config/flavor.txt', flavor]);
+                await sendMessage('writeFile', ['/persist/artifact.zip', new Uint8Array(zipContents)]);
 
-            flavorLaunch.innerHTML = 'Refreshing PHP...'
-            console.log('Refreshing PHP...')
-            await sendMessage('refresh', []);
+                console.log('Extracting archive...')
+                console.log('fetching init code')
+                const initPhpCode = fetch('/assets/init.php');
 
-            flavorLaunch.innerHTML = 'Removing archive...'
-            console.log('Removing archive...');
-            sendMessage('unlink', ['/persist/artifact.zip'])
+                console.log('booting PhpWeb')
+                const php = new PhpWeb({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] });
+                php.addEventListener('output', event => {
+                    event.detail.forEach(detail => {
+                        const data = JSON.parse(detail.trim());
+                        console.log(data)
+                        if (data?.type === 'install') {
+                            this.innerHTML = data.message
+                        }
+                    })
+                });
+                php.addEventListener('error', event => console.log(event.detail));
+                await php.binary;
 
-            flavorLaunch.innerHTML = 'Redirecting...'
-            console.log('Redirecting...');
-            window.location = `/cgi/${flavor}`
+                console.log('running init code')
+                const initPhpExitCode = await php.run(await (await initPhpCode).text());
+                console.log(initPhpExitCode)
+
+                this.innerHTML = 'Refreshing PHP...'
+                console.log('Refreshing PHP...')
+                await sendMessage('refresh', []);
+
+                this.innerHTML = 'Installing site...'
+                console.log('Installing site...')
+                const installSiteCode = await (await fetch('/assets/install-site.php')).text();
+                console.log('Executing install site code...')
+                const installSiteExitCode = await php.run(installSiteCode);
+                console.log(installSiteExitCode)
+
+                this.innerHTML = 'Removing archive...'
+                console.log('Removing archive...');
+                sendMessage('unlink', ['/config/flavor.txt'])
+                sendMessage('unlink', ['/persist/artifact.zip'])
+
+                this.innerHTML = 'Redirecting...'
+                console.log('Redirecting...');
+                window.location = `/cgi/${flavor}`
+            });
         }
     </script>
 </body>

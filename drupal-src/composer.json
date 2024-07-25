@@ -105,8 +105,7 @@
             "drupal/core": {
                 "Remove Fibers from Renderer": "./patches/renderer-remove-fibers.patch",
                 "Remove BigPipe from Umami Demo": "./patches/demo_umami-remove-big_pipe.patch",
-                "Remove BigPipe from Standard": "./patches/standard-remove-big_pipe.patch",
-                "Remove file_system service usage from SQLite installer": "./patches/sqlite-file_system-service.patch"
+                "Remove BigPipe from Standard": "./patches/standard-remove-big_pipe.patch"
             }
         }
     }

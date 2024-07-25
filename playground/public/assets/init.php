@@ -30,8 +30,9 @@ if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
 		if($newPercent - $percent >= 0.01)
 		{
 			print json_encode([
-                'message' => 'Unpacking files ' . round($newPercent * 100, 2) . '%'
-                ]) . PHP_EOL;
+                    'message' => 'Unpacking files ' . round($newPercent * 100, 2) . '%',
+                    'type' => 'unarchive',
+                ], JSON_THROW_ON_ERROR) . PHP_EOL;
 			$percent = $newPercent;
 		}
 	}

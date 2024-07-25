@@ -58,15 +58,19 @@ install_drupal($class_loader, $parameters, static function ($install_state) {
     if (!$started) {
         $started = TRUE;
         print json_encode([
-            'message' => 'Installing Standard....'
-        ]) . PHP_EOL;
+                'message' => 'Installing Standard....',
+                'type' => 'install',
+            ], JSON_THROW_ON_ERROR) . PHP_EOL;
     }
     // @todo use array_filter to count tasks w/ display name for progress tracking.
     $tasks_to_perform = install_tasks_to_perform($install_state);
     $task = current($tasks_to_perform);
     if (isset($task['display_name'])) {
         print json_encode([
-                'message' => "Performing {$task['display_name']}"
-            ]) . PHP_EOL;
+                'message' => "Performing {$task['display_name']}",
+                'type' => 'install',
+            ], JSON_THROW_ON_ERROR) . PHP_EOL;
     }
 });
+
+exit;

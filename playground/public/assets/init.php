@@ -36,6 +36,10 @@ if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
 			$percent = $newPercent;
 		}
 	}
+    print json_encode([
+            'message' => 'Unpacking files 100%',
+            'type' => 'unarchive',
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
 }
 else {
     // todo convert to JSON output

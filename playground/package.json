@@ -23,7 +23,7 @@
     "tailwind:build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
     "postinstall": "./postinstall.sh",
-    "worker:build": "webpack --config service-worker.webpack.js",
+    "worker:build": "webpack --config workers.webpack.js",
     "build": "npm run worker:build && npm run tailwind:build"
   }
 }

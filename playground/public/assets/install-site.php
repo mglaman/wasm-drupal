@@ -17,6 +17,7 @@ $install_profile = 'standard';
 $langcode = 'en';
 $site_path = 'sites/default';
 
+// @todo have this written by the worker as JSON and parsed from the disk?
 $parameters = [
     'interactive' => FALSE,
     'site_path' => $site_path,
@@ -55,22 +56,21 @@ require_once 'core/includes/install.core.inc';
 
 install_drupal($class_loader, $parameters, static function ($install_state) {
     static $started = FALSE;
+    static $finished, $total = 0;
     if (!$started) {
+        print json_encode([
+                'message' => 'Beginning install tasks',
+                'type' => 'install',
+            ], JSON_THROW_ON_ERROR) . PHP_EOL;
+
         $started = TRUE;
-        print json_encode([
-                'message' => 'Installing Standard....',
-                'type' => 'install',
-            ], JSON_THROW_ON_ERROR) . PHP_EOL;
+        $total = count(install_tasks_to_perform($install_state));
     }
-    // @todo use array_filter to count tasks w/ display name for progress tracking.
-    $tasks_to_perform = install_tasks_to_perform($install_state);
-    $task = current($tasks_to_perform);
-    if (isset($task['display_name'])) {
-        print json_encode([
-                'message' => "Performing {$task['display_name']}",
-                'type' => 'install',
-            ], JSON_THROW_ON_ERROR) . PHP_EOL;
-    }
+    print json_encode([
+            'message' => "Performing install task ($finished / $total)",
+            'type' => 'install',
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
+    $finished++;
 });
 
 exit;

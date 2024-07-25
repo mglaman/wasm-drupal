@@ -14,7 +14,7 @@ drupal-update:
 drupal-build:
 	cd drupal-src && composer install --ignore-platform-reqs
 
-drupal-archive:
+drupal-archive: drupal-build
 	cd drupal-src && composer archive --format=zip --file=drupal
 	mv drupal-src/drupal.zip .
 

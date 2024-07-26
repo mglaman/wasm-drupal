@@ -141,6 +141,10 @@
         worker.onmessage = async ({ data, source}) => {
             const { action, params, message, type } = data;
 
+            if (type === 'error') {
+                worker.postMessage({ action: 'stop' })
+            }
+
             if (action === 'status') {
                 const { flavor } = params;
                 const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)

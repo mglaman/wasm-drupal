@@ -13,8 +13,10 @@ $docroot = '/persist/' . $flavor;
 $zip = new ZipArchive;
 
 if (!file_exists('/persist/artifact.zip')) {
-    // todo convert to JSON output
-    print "artifact could not be found" . PHP_EOL;
+    print json_encode([
+            'message' => 'artifact could not be found',
+            'type' => 'error',
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
     exit(1);
 }
 
@@ -42,8 +44,10 @@ if($zip->open('/persist/artifact.zip', ZipArchive::RDONLY) === TRUE)
         ], JSON_THROW_ON_ERROR) . PHP_EOL;
 }
 else {
-    // todo convert to JSON output
-    print "could not open artifact archive" . PHP_EOL;
+    print json_encode([
+            'message' => 'could not open artifact archive',
+            'type' => 'error',
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
     exit(1);
 }
 

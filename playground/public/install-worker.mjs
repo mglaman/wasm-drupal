@@ -111,4 +111,7 @@ onmessage = async ({data, source}) => {
             message: 'Finishing'
         })
     }
+    else if (action === 'stop') {
+        self.close()
+    }
 }

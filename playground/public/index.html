@@ -109,24 +109,9 @@
         </div>
     </main>
     <script type="module">
-        import { sendMessageFor, onMessage } from './/msg-bus.mjs';
-        const sendMessage = sendMessageFor((`${window.location.origin}/service-worker.mjs`))
+        import { registerWorker } from './drupal-cgi-worker.mjs'
+        const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
         const flavors = ['drupal', 'starshot']
-
-        const serviceWorker = navigator.serviceWorker;
-
-        serviceWorker.register(`/service-worker.mjs`, {
-            type: "module"
-        })
-            .catch(() => {
-                console.log('Browser did not support ES modules in service worker, trying bundled service worker')
-                serviceWorker.register(`/service-worker.js`)
-                    .catch(error => {
-                        alert("There was an error loading the service worker. Check known compatibility issues and your browser's developer console.")
-                        console.error(error)
-                    });
-            });
-        serviceWorker.addEventListener('message', onMessage);
 
         function getInstallWorker() {
             try {
@@ -140,6 +125,10 @@
         const worker = getInstallWorker();
         worker.onmessage = async ({ data, source}) => {
             const { action, params, message, type } = data;
+
+            if (type === 'error') {
+                worker.postMessage({ action: 'stop' })
+            }
 
             if (action === 'status') {
                 const { flavor } = params;

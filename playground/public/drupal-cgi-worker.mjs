@@ -1,3 +1,4 @@
+import { sendMessageFor, onMessage } from './msg-bus.mjs';
 import {PhpCgiWorker} from "./PhpCgiWorker.mjs";
 
 const onRequest = (request, response) => {
@@ -51,7 +52,7 @@ export class DrupalCgiWorker extends PhpCgiWorker {
     }
 }
 
-export function registerWorker(worker, prefix, docroot, vHosts = []) {
+export function setUpWorker(worker, prefix, docroot, vHosts = []) {
     const php = new DrupalCgiWorker({
         prefix,
         docroot,
@@ -65,4 +66,23 @@ export function registerWorker(worker, prefix, docroot, vHosts = []) {
     worker.addEventListener('fetch',    event => php.handleFetchEvent(event));
     worker.addEventListener('message',  event => php.handleMessageEvent(event));
     return php
+}
+
+export function registerWorker(serviceWorkerUrl) {
+    const sendMessage = sendMessageFor(serviceWorkerUrl)
+    const serviceWorker = navigator.serviceWorker;
+    serviceWorker.register(`/service-worker.mjs`, {
+        type: "module"
+    })
+        .catch(() => {
+            console.log('Browser did not support ES modules in service worker, trying bundled service worker')
+            serviceWorker.register(`/service-worker.js`)
+                .catch(error => {
+                    alert("There was an error loading the service worker. Check known compatibility issues and your browser's developer console.")
+                    console.error(error)
+                });
+        });
+    serviceWorker.addEventListener('message', onMessage);
+
+    return sendMessage
 }

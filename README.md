@@ -62,6 +62,11 @@ Use your browser's "Clear site data" functionality to perform a manual reset.
 
 Visit [chrome://serviceworker-internals/](chrome://serviceworker-internals/)
 
+## Limitations
+
+* php-wasm does not provide an exposed function for running a specific script file, that means scripts like Composer and Drush cannot be directly invoked.
+* php-wasm's SAPI name is `embed`, which breaks any code which checks `PHP_SAPI === 'cli'`, such as Drush.
+
 ## Next steps
 
 - [ ] Allow exporting Drupal database to use locally, with DDEV. [#10](https://github.com/mglaman/wasm-drupal/issues/10)

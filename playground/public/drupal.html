@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en" class="h-dvh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Try Drupal Core</title>
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-drupal-blue h-dvh">
+<main class="flex flex-col items-center justify-center w-full h-dvh">
+    <svg id="initializing" class="animate-spin h-16 w-16 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    <div class="rounded-md p-4 bg-white" id="actions" hidden>
+        <button class="p-2" id="resume">Resume session</button>
+        <button class="p-2" id="new">New session</button>
+    </div>
+    <div id="progress" class="rounded-md p-4 bg-white w-96 text-center" hidden>
+
+    </div>
+</main>
+<script type="module">
+    import { registerWorker } from './drupal-cgi-worker.mjs'
+    const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
+    const flavor = 'drupal';
+    const artifact = 'drupal-wasm-1.0.zip'
+
+    function getInstallWorker() {
+        try {
+            return new Worker('/install-worker.mjs', {
+                type: "module"
+            })
+        } catch {
+            return  new Worker('/install-worker.js')
+        }
+    }
+    const worker = getInstallWorker();
+    worker.onmessage = async ({ data, source}) => {
+        const { action, message, type } = data;
+
+        if (type === 'error') {
+            worker.postMessage({ action: 'stop' })
+        }
+
+        if (action === 'started') {
+            document.getElementById('initializing').remove()
+            document.getElementById('progress').hidden = false;
+            document.getElementById('progress').innerHTML = 'Starting runtime'
+        }
+        else if (action === 'status') {
+            document.getElementById('progress').innerHTML = message
+        }
+        else if (action === 'finished') {
+            document.getElementById('progress').innerHTML = 'Refreshing runtime'
+            console.log('Refreshing PHP')
+            await sendMessage('refresh', []);
+
+            document.getElementById('progress').innerHTML = 'Redirecting to session'
+            console.log('Redirecting');
+            window.location = `/cgi/${flavor}`
+        }
+        else {
+            console.log(data)
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('Waiting for service worker')
+        await navigator.serviceWorker.ready;
+
+        console.log('Checking for existing session')
+        const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
+        if (checkWww.exists) {
+            document.getElementById('initializing').classList.toggle('hidden')
+            document.getElementById('actions').hidden = false;
+            document.getElementById('resume').addEventListener('click', event => {
+                document.getElementById('actions').hidden = true;
+                console.log('Starting')
+                worker.postMessage({
+                    action: 'start',
+                    params: {
+                        flavor,
+                        artifact,
+                    }
+                })
+            })
+            // @todo move cleanup to install-worker action
+            document.getElementById('new').addEventListener('click', event => {
+                if (!window.confirm("Your site's data will be completely removed, do you want to continue?")) {
+                    return;
+                }
+
+                document.getElementById('actions').hidden = true;
+                document.getElementById('initializing').classList.toggle('hidden')
+
+                const openDb = indexedDB.open("/persist", 21);
+                openDb.onsuccess = () => {
+                    const db = openDb.result;
+                    const transaction = db.transaction(["FILE_DATA"], "readwrite");
+                    const objectStore = transaction.objectStore("FILE_DATA");
+                    // IDBKeyRange.bound trick found at https://stackoverflow.com/a/76714057/1949744
+                    const objectStoreRequest = objectStore.delete(IDBKeyRange.bound(`/persist/${flavor}`, `/persist/${flavor}/\uffff`));
+
+                    objectStoreRequest.onsuccess = async () => {
+                        db.close();
+                        console.log('Reloading after purging data');
+                        await sendMessage('refresh', []);
+                        console.log('Reloading after purging data');
+                        window.location.reload();
+                    };
+                };
+            })
+        } else {
+            await navigator.locks.request('install', async () => {
+                console.log('Starting')
+                worker.postMessage({
+                    action: 'start',
+                    params: {
+                        flavor,
+                        artifact,
+                    }
+                })
+            });
+        }
+    });
+</script>
+</body>
+</html>

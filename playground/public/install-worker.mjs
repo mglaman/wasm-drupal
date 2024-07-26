@@ -31,6 +31,12 @@ onmessage = async ({data, source}) => {
     php.addEventListener('error', event => console.log(event.detail));
 
     if (action === 'start') {
+        postMessage({
+            action: `started`,
+            params,
+            message: 'Starting'
+        })
+
         const { flavor, artifact } = params;
 
         const checkWww = await php.analyzePath(`/persist/${flavor}`)
@@ -40,76 +46,76 @@ onmessage = async ({data, source}) => {
                 params,
                 message: 'Session exists'
             })
-        }
-
-        const checkArchive = await php.analyzePath('/persist/artifact.zip');
-        if (checkArchive.exists) {
+        } else {
+            const checkArchive = await php.analyzePath('/persist/artifact.zip');
+            if (checkArchive.exists) {
+                postMessage({
+                    action: 'status',
+                    params,
+                    message: 'Removing existing archive'
+                })
+                console.log('Removing archive');
+                await php.unlink('/persist/artifact.zip')
+            }
             postMessage({
                 action: 'status',
                 params,
-                message: 'Removing existing archive'
+                message: 'Downloading artifact'
+            })
+            console.log('Downloading artifact')
+            const downloader = fetch(`/assets/${artifact}`);
+            const download = await downloader;
+            const zipContents = await download.arrayBuffer();
+
+            postMessage({
+                action: 'status',
+                params,
+                message: 'Saving artifact'
+            })
+            console.log('Writing archive contents')
+            await php.writeFile('/config/flavor.txt', flavor)
+            await php.writeFile('/persist/artifact.zip', new Uint8Array(zipContents))
+
+            postMessage({
+                action: 'status',
+                params,
+                message: 'Extracting artifact'
+            })
+            console.log('Extracting archive...')
+            console.log('fetching init code')
+            const initPhpCode = fetch('/assets/init.php');
+            await php.binary;
+
+            console.log('running init code')
+            const initPhpExitCode = await php.run(await (await initPhpCode).text());
+            console.log(initPhpExitCode)
+
+            postMessage({
+                action: 'status',
+                params,
+                message: 'Installing site'
+            })
+            console.log('Installing site')
+            const installSiteCode = await (await fetch('/assets/install-site.php')).text();
+            console.log('Executing install site code...')
+            const installSiteExitCode = await php.run(installSiteCode);
+            console.log(installSiteExitCode)
+
+            postMessage({
+                action: 'status',
+                params,
+                message: 'Removing artifact archive'
             })
             console.log('Removing archive');
+            await php.unlink('/config/flavor.txt')
             await php.unlink('/persist/artifact.zip')
+
+            postMessage({
+                action: `finished`,
+                params,
+                message: 'Finishing'
+            })
         }
-        postMessage({
-            action: 'status',
-            params,
-            message: 'Downloading artifact'
-        })
-        console.log('Downloading artifact')
-        const downloader = fetch(`/assets/${artifact}`);
-        const download = await downloader;
-        const zipContents = await download.arrayBuffer();
-
-        postMessage({
-            action: 'status',
-            params,
-            message: 'Saving artifact'
-        })
-        console.log('Writing archive contents')
-        await php.writeFile('/config/flavor.txt', flavor)
-        await php.writeFile('/persist/artifact.zip', new Uint8Array(zipContents))
-
-        postMessage({
-            action: 'status',
-            params,
-            message: 'Extracting artifact'
-        })
-        console.log('Extracting archive...')
-        console.log('fetching init code')
-        const initPhpCode = fetch('/assets/init.php');
-        await php.binary;
-
-        console.log('running init code')
-        const initPhpExitCode = await php.run(await (await initPhpCode).text());
-        console.log(initPhpExitCode)
-
-        postMessage({
-            action: 'status',
-            params,
-            message: 'Installing site'
-        })
-        console.log('Installing site')
-        const installSiteCode = await (await fetch('/assets/install-site.php')).text();
-        console.log('Executing install site code...')
-        const installSiteExitCode = await php.run(installSiteCode);
-        console.log(installSiteExitCode)
-
-        postMessage({
-            action: 'status',
-            params,
-            message: 'Removing artifact archive'
-        })
-        console.log('Removing archive');
-        await php.unlink('/config/flavor.txt')
-        await php.unlink('/persist/artifact.zip')
-
-        postMessage({
-            action: `finished`,
-            params,
-            message: 'Finishing'
-        })
     }
     else if (action === 'stop') {
         self.close()

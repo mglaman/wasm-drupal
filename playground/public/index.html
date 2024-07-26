@@ -71,13 +71,10 @@
 
                 </div>
                 <div class="px-4 py-4 sm:px-6">
-                    <button type="button"
-                        class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                        data-launch data-flavor="drupal" data-artifact="drupal-wasm-1.0.zip"
-                        disabled>Loading</button>
-                    <button type="button"
-                        class="rounded-md bg-red-500 px-3.5 py-2.5 text-sm font-semibold text-drupal-black shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-400"
-                        data-cleanup data-flavor="drupal" hidden disabled>Reset</button>
+                    <a class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                            href="/drupal.html">
+                        Launch
+                    </a>
                 </div>
             </div>
             <div class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-drupal-white shadow flex flex-col">
@@ -111,7 +108,7 @@
     <script type="module">
         import { registerWorker } from './drupal-cgi-worker.mjs'
         const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
-        const flavors = ['drupal', 'starshot']
+        const flavors = ['starshot']
 
         function getInstallWorker() {
             try {

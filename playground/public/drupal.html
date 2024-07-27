@@ -60,6 +60,11 @@
             console.log('Redirecting');
             window.location = `/cgi/${flavor}`
         }
+        else if (action === 'reload') {
+            console.log('Refreshing PHP')
+            await sendMessage('refresh', []);
+            window.location.reload();
+        }
         else {
             console.log(data)
         }
@@ -85,34 +90,20 @@
                     }
                 })
             })
-            // @todo move cleanup to install-worker action
-            document.getElementById('new').addEventListener('click', event => {
-                if (!window.confirm("Your site's data will be completely removed, do you want to continue?")) {
-                    return;
+            document.getElementById('new').addEventListener('click', () => {
+                if (window.confirm("Your site's data will be completely removed, do you want to continue?")) {
+                    document.getElementById('actions').hidden = true;
+                    document.getElementById('initializing').classList.toggle('hidden')
+                    worker.postMessage({
+                        action: 'remove',
+                        params: {
+                            flavor
+                        }
+                    })
                 }
-
-                document.getElementById('actions').hidden = true;
-                document.getElementById('initializing').classList.toggle('hidden')
-
-                const openDb = indexedDB.open("/persist", 21);
-                openDb.onsuccess = () => {
-                    const db = openDb.result;
-                    const transaction = db.transaction(["FILE_DATA"], "readwrite");
-                    const objectStore = transaction.objectStore("FILE_DATA");
-                    // IDBKeyRange.bound trick found at https://stackoverflow.com/a/76714057/1949744
-                    const objectStoreRequest = objectStore.delete(IDBKeyRange.bound(`/persist/${flavor}`, `/persist/${flavor}/\uffff`));
-
-                    objectStoreRequest.onsuccess = async () => {
-                        db.close();
-                        console.log('Reloading after purging data');
-                        await sendMessage('refresh', []);
-                        console.log('Reloading after purging data');
-                        window.location.reload();
-                    };
-                };
             })
         } else {
-            await navigator.locks.request('install', async () => {
+            await navigator.locks.request('install', () => {
                 console.log('Starting')
                 worker.postMessage({
                     action: 'start',

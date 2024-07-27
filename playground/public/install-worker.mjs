@@ -117,6 +117,24 @@ onmessage = async ({data, source}) => {
             })
         }
     }
+    else if (action === 'remove') {
+        const { flavor } = params;
+        const openDb = indexedDB.open("/persist", 21);
+        openDb.onsuccess = () => {
+            const db = openDb.result;
+            const transaction = db.transaction(["FILE_DATA"], "readwrite");
+            const objectStore = transaction.objectStore("FILE_DATA");
+            // IDBKeyRange.bound trick found at https://stackoverflow.com/a/76714057/1949744
+            const objectStoreRequest = objectStore.delete(IDBKeyRange.bound(`/persist/${flavor}`, `/persist/${flavor}/\uffff`));
+
+            objectStoreRequest.onsuccess = () => {
+                db.close();
+                postMessage({
+                    action: 'reload'
+                })
+            };
+        };
+    }
     else if (action === 'stop') {
         self.close()
     }

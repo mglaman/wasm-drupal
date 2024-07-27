@@ -36,7 +36,7 @@
         }
     }
     const worker = getInstallWorker();
-    worker.onmessage = async ({ data, source}) => {
+    worker.onmessage = async ({ data }) => {
         const { action, message, type } = data;
 
         if (type === 'error') {
@@ -79,7 +79,7 @@
         if (checkWww.exists) {
             document.getElementById('initializing').classList.toggle('hidden')
             document.getElementById('actions').hidden = false;
-            document.getElementById('resume').addEventListener('click', event => {
+            document.getElementById('resume').addEventListener('click', () => {
                 document.getElementById('actions').hidden = true;
                 console.log('Starting')
                 worker.postMessage({
@@ -103,16 +103,14 @@
                 }
             })
         } else {
-            await navigator.locks.request('install', () => {
-                console.log('Starting')
-                worker.postMessage({
-                    action: 'start',
-                    params: {
-                        flavor,
-                        artifact,
-                    }
-                })
-            });
+            console.log('Starting')
+            worker.postMessage({
+                action: 'start',
+                params: {
+                    flavor,
+                    artifact,
+                }
+            })
         }
     });
 </script>

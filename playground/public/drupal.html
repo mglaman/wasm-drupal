@@ -12,9 +12,9 @@
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
-    <div class="rounded-md p-4 bg-white" id="actions" hidden>
-        <button class="p-2" id="resume">Resume session</button>
-        <button class="p-2" id="new">New session</button>
+    <div class="isolate hidden inline-flex rounded-md shadow-sm" id="actions">
+        <button class="bg-white relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100" id="resume">Resume session</button>
+        <button class="bg-white relative inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-drupal-rec" id="new">New session</button>
     </div>
     <div id="progress" class="rounded-md p-4 bg-white w-96 text-center" hidden>
 
@@ -78,7 +78,7 @@
         const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
         if (checkWww.exists) {
             document.getElementById('initializing').classList.toggle('hidden')
-            document.getElementById('actions').hidden = false;
+            document.getElementById('actions').classList.toggle('hidden')
             document.getElementById('resume').addEventListener('click', () => {
                 document.getElementById('actions').hidden = true;
                 console.log('Starting')

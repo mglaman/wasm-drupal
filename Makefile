@@ -19,7 +19,7 @@ drupal-archive: drupal-build
 	mv drupal-src/drupal-wasm-1.0.zip .
 
 copy-playground-archive: drupal-archive
-	rm playground/public/assets/drupal-wasm-1.0.zip
+	rm -f playground/public/assets/drupal-wasm-1.0.zip
 	mv drupal-wasm-1.0.zip playground/public/assets
 
 playground-build:

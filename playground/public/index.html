@@ -71,13 +71,10 @@
 
                 </div>
                 <div class="px-4 py-4 sm:px-6">
-                    <button type="button"
-                        class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                        data-launch data-flavor="drupal" data-artifact="drupal-wasm-1.0.zip"
-                        disabled>Loading</button>
-                    <button type="button"
-                        class="rounded-md bg-red-500 px-3.5 py-2.5 text-sm font-semibold text-drupal-black shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-400"
-                        data-cleanup data-flavor="drupal" hidden disabled>Reset</button>
+                    <a class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                            href="/drupal.html">
+                        Launch
+                    </a>
                 </div>
             </div>
             <div class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-drupal-white shadow flex flex-col">
@@ -109,24 +106,9 @@
         </div>
     </main>
     <script type="module">
-        import { sendMessageFor, onMessage } from './msg-bus.mjs';
-        const sendMessage = sendMessageFor((`${window.location.origin}/service-worker.mjs`))
-        const flavors = ['drupal', 'starshot']
-
-        const serviceWorker = navigator.serviceWorker;
-
-        serviceWorker.register(`/service-worker.mjs`, {
-            type: "module"
-        })
-            .catch(() => {
-                console.log('Browser did not support ES modules in service worker, trying bundled service worker')
-                serviceWorker.register(`/service-worker.js`)
-                    .catch(error => {
-                        alert("There was an error loading the service worker. Check known compatibility issues and your browser's developer console.")
-                        console.error(error)
-                    });
-            });
-        serviceWorker.addEventListener('message', onMessage);
+        import { registerWorker } from './drupal-cgi-worker.mjs'
+        const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
+        const flavors = ['starshot']
 
         function getInstallWorker() {
             try {
@@ -138,7 +120,7 @@
             }
         }
         const worker = getInstallWorker();
-        worker.onmessage = async ({ data, source}) => {
+        worker.onmessage = async ({ data }) => {
             const { action, params, message, type } = data;
 
             if (type === 'error') {
@@ -161,6 +143,13 @@
                 flavorLaunch.innerHTML = 'Redirecting'
                 console.log('Redirecting');
                 window.location = `/cgi/${flavor}`
+            }
+            else if (action === 'reload') {
+                console.log('Refreshing PHP')
+                await sendMessage('refresh', []);
+                const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
+                flavorCleanup.innerHTML = 'Reloading'
+                window.location.reload();
             }
             else {
                 console.log(data)
@@ -200,50 +189,34 @@
         });
 
         async function cleanup(event ) {
-            if (!window.confirm("Your site's data will be completely removed, do you want to continue?")) {
-                return;
+            if (window.confirm("Your site's data will be completely removed, do you want to continue?")) {
+                const { flavor } = event.target.dataset;
+                const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
+                flavorCleanup.hidden = true;
+                flavorCleanup.disabled = true;
+                flavorCleanup.innerHTML = 'Cleaning up'
+
+                worker.postMessage({
+                    action: 'remove',
+                    params: {
+                        flavor
+                    }
+                })
             }
-            const { flavor } = event.target.dataset;
-
-            const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
-
-            flavorCleanup.hidden = true;
-            flavorCleanup.disabled = true;
-
-            flavorCleanup.innerHTML = 'Cleaning up'
-            const openDb = indexedDB.open("/persist", 21);
-            openDb.onsuccess = () => {
-                const db = openDb.result;
-                const transaction = db.transaction(["FILE_DATA"], "readwrite");
-                const objectStore = transaction.objectStore("FILE_DATA");
-                // IDBKeyRange.bound trick found at https://stackoverflow.com/a/76714057/1949744
-                const objectStoreRequest = objectStore.delete(IDBKeyRange.bound(`/persist/${flavor}`, `/persist/${flavor}/\uffff`));
-
-                objectStoreRequest.onsuccess = async () => {
-                    db.close();
-                    console.log('Reloading after purging data');
-                    await sendMessage('refresh', []);
-                    console.log('Reloading after purging data');
-                    flavorCleanup.innerHTML = 'Reloading'
-                    window.location.reload();
-                };
-            };
         }
 
         async function launch(event) {
             this.disabled = true;
             this.innerHTML = 'Preparing'
-            await navigator.locks.request('install', async () => {
-                const { flavor, artifact } = event.target.dataset;
-                console.log('Starting')
-                worker.postMessage({
-                    action: 'start',
-                    params: {
-                        flavor,
-                        artifact,
-                    }
-                })
-            });
+            const { flavor, artifact } = event.target.dataset;
+            console.log('Starting')
+            worker.postMessage({
+                action: 'start',
+                params: {
+                    flavor,
+                    artifact,
+                }
+            })
         }
     </script>
 </body>

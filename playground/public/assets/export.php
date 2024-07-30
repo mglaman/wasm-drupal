@@ -26,19 +26,37 @@ $files = new RecursiveIteratorIterator(
 $total = iterator_count($files);
 $i = $percent = 0;
 foreach ($files as $name => $file) {
-    $zip->addFile($name);
-    $newPercent = (++$i / $total);
-    if ($newPercent - $percent >= 0.01) {
-        print json_encode([
-                'message' => 'Packing files ' . round($newPercent * 100, 2) . '%',
-                'type' => 'archive',
-            ], JSON_THROW_ON_ERROR) . PHP_EOL;
-        $percent = $newPercent;
+    if (is_dir($name)) {
+        continue;
     }
-    print json_encode([
-            'message' => 'Packing files 100%',
-            'type' => 'archive',
-        ], JSON_THROW_ON_ERROR) . PHP_EOL;
+    $added = $zip->addFile($name, str_replace($docroot, '', $name));
+    if ($added) {
+        $newPercent = (++$i / $total);
+        if ($newPercent - $percent >= 0.01) {
+            print json_encode([
+                    'message' => 'Packing files ' . round($newPercent * 100, 2) . '%',
+                    'type' => 'archive',
+                ], JSON_THROW_ON_ERROR) . PHP_EOL;
+            $percent = $newPercent;
+        }
+    } else {
+        print json_encode([
+                'message' => 'Could not pack file ' . $name,
+                'type' => 'error',
+            ], JSON_THROW_ON_ERROR) . PHP_EOL;
+        exit();
+    }
 }
+print json_encode([
+        'message' => 'Packing files 100%',
+        'type' => 'archive',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;
+
+$zip->close();
+
+print json_encode([
+        'message' => 'Export archive created',
+        'type' => 'archive',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;
 
 exit(0);

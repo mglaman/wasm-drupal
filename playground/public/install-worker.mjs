@@ -171,16 +171,13 @@ onmessage = async ({data }) => {
             const blob = new Blob([exportContents], { type: 'application/zip' })
 
             postMessage({
-                action: `finished`,
-                params,
+                action: `export_finished`,
+                params: {
+                    ...params,
+                    export: blob
+                },
                 message: 'Download ready'
             })
-
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'drupal.sql'
-            link.click();
-            URL.revokeObjectURL(link.href);
             setTimeout(() => php.unlink('/persist/export.zip'), 0)
 
         })

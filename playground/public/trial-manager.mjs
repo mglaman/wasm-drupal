@@ -65,20 +65,30 @@ class TrialManager extends HTMLElement {
         })
 
         const newButton = document.createElement('button');
-        newButton.classList.add(...buttonClasses, 'rounded-r-md', 'hover:bg-drupal-rec')
+        newButton.classList.add(...buttonClasses, 'hover:bg-drupal-rec')
         newButton.id = 'new'
         newButton.innerText = 'New session'
         newButton.addEventListener('click', () => {
             if (window.confirm("Your site's data will be completely removed, do you want to continue?")) {
-                this.removeAttribute('mode');
                 this.dispatchEvent(new CustomEvent('new', {
                     composed: true
                 }))
             }
         })
 
+        const exportButton = document.createElement('button')
+        exportButton.classList.add(...buttonClasses, 'rounded-r-md')
+        exportButton.id = 'export'
+        exportButton.innerText = 'Export'
+        exportButton.addEventListener('click', () => {
+            this.dispatchEvent(new CustomEvent('export', {
+                composed: true
+            }))
+        })
+
         wrapper.appendChild(resumeButton)
         wrapper.appendChild(newButton)
+        wrapper.appendChild(exportButton)
         return wrapper
     }
 

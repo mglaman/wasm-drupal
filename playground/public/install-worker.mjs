@@ -142,4 +142,47 @@ onmessage = async ({data }) => {
     else if (action === 'stop') {
         self.close()
     }
+    else if (action === 'export') {
+        const { flavor } = params;
+        await self.navigator.locks.request('export', async () => {
+            postMessage({
+                action: `started`,
+                params,
+                message: 'Preparing to export'
+            })
+            await php.writeFile('/config/flavor.txt', flavor)
+
+            console.log('fetching export code')
+            const exportPhpCode = fetch('/assets/export.php');
+            await php.binary;
+
+            console.log('running export code')
+            const exportPhpExitCode = await php.run(await (await exportPhpCode).text())
+            console.log(exportPhpExitCode)
+
+            await php.unlink('/config/flavor.txt')
+            postMessage({
+                action: `status`,
+                params,
+                message: 'Preparing download'
+            })
+
+            const exportContents = await php.readFile('/persist/export.zip')
+            const blob = new Blob([exportContents], { type: 'application/zip' })
+
+            postMessage({
+                action: `finished`,
+                params,
+                message: 'Download ready'
+            })
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'drupal.sql'
+            link.click();
+            URL.revokeObjectURL(link.href);
+            setTimeout(() => php.unlink('/persist/export.zip'), 0)
+
+        })
+    }
 }

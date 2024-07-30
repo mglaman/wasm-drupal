@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Try Drupal Core</title>
+    <title>Try Starshot Prototype</title>
     <link href="styles.css" rel="stylesheet">
 </head>
 <body class="bg-drupal-blue h-dvh">
@@ -12,8 +12,8 @@
 <script type="module">
     import { registerWorker } from './drupal-cgi-worker.mjs'
     const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
-    const flavor = 'drupal';
-    const artifact = 'drupal-wasm-1.0.zip'
+    const flavor = 'starshot';
+    const artifact = 'drupal-starshot.zip'
 
     function getInstallWorker() {
         try {

@@ -2,19 +2,19 @@ class TrialManager extends HTMLElement {
     static observedAttributes = ['mode', 'message'];
     constructor() {
         super()
+        this.spinner = this.initializingEl()
+        this.actions = this.actionsEl()
+        this.progress = this.progressEl()
     }
 
     render() {
         const mode = this.getAttribute('mode');
         if (!mode) {
-            this.replaceChildren(this.initializingEl())
+            this.replaceChildren(this.spinner)
         } else if (mode === 'new_session') {
-            const progress = document.createElement('div')
-            progress.classList.add('rounded-md', 'p-4', 'bg-white', 'w-96', 'text-center')
-            progress.innerText = this.getAttribute('message')
-            this.replaceChildren(progress)
+            this.replaceChildren(this.progress)
         } else if (mode === 'existing_session') {
-            this.replaceChildren(this.actionsEl())
+            this.replaceChildren(this.actions)
         }
     }
 
@@ -32,7 +32,13 @@ class TrialManager extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        this.render()
+        if (name === 'mode') {
+            this.render()
+            this.setAttribute('message', '')
+        }
+        else if (name === 'message') {
+            this.progress.innerText = newValue
+        }
     }
 
     initializingEl() {
@@ -74,6 +80,13 @@ class TrialManager extends HTMLElement {
         wrapper.appendChild(resumeButton)
         wrapper.appendChild(newButton)
         return wrapper
+    }
+
+    progressEl() {
+        const progress = document.createElement('div')
+        progress.classList.add('rounded-md', 'p-4', 'bg-white', 'w-96', 'text-center')
+        progress.innerText = this.getAttribute('message')
+        return progress
     }
 }
 

@@ -65,9 +65,9 @@
         console.log('Checking for existing session')
         const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
         if (checkWww.exists) {
-            const sessionActions = document.querySelector('trial-manager');
-            sessionActions.setAttribute('mode', 'existing_session');
-            sessionActions.addEventListener('resume', () => {
+            const trialManager = document.querySelector('trial-manager');
+            trialManager.setAttribute('mode', 'existing_session');
+            trialManager.addEventListener('resume', () => {
                 console.log('Starting')
                 worker.postMessage({
                     action: 'start',
@@ -77,7 +77,7 @@
                     }
                 })
             })
-            sessionActions.addEventListener('new', () => {
+            trialManager.addEventListener('new', () => {
                 worker.postMessage({
                     action: 'remove',
                     params: {

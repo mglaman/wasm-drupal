@@ -4,7 +4,7 @@ const defaultTheme = require('tailwindcss/defaultTheme')
 // Colors from https://drupal.widencollective.com/portals/gfvztttq/BrandPortal
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./public/**/*.{html,js}"],
+  content: ["./public/**/*.{html,js,mjs}"],
   theme: {
     extend: {
       fontFamily: {

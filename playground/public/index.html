@@ -85,13 +85,10 @@
                     </div>
                 </div>
                 <div class="px-4 py-4 sm:px-6">
-                    <button type="button"
-                        class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                        data-launch data-flavor="starshot" data-artifact="drupal-starshot.zip"
-                        disabled>Loading</button>
-                    <button type="button"
-                        class="rounded-md bg-red-500 px-3.5 py-2.5 text-sm font-semibold text-drupal-black shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-400"
-                        data-cleanup data-flavor="starshot" hidden disabled>Reset</button>
+                    <a class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                       href="/starshot.html">
+                        Launch
+                    </a>
                 </div>
             </div>
         </div>
@@ -105,120 +102,6 @@
                 </svg></a>
         </div>
     </main>
-    <script type="module">
-        import { registerWorker } from './drupal-cgi-worker.mjs'
-        const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
-        const flavors = ['starshot']
-
-        function getInstallWorker() {
-            try {
-                return new Worker('/install-worker.mjs', {
-                    type: "module"
-                })
-            } catch {
-                return  new Worker('/install-worker.js')
-            }
-        }
-        const worker = getInstallWorker();
-        worker.onmessage = async ({ data }) => {
-            const { action, params, message, type } = data;
-
-            if (type === 'error') {
-                worker.postMessage({ action: 'stop' })
-            }
-
-            if (action === 'status') {
-                const { flavor } = params;
-                const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
-                flavorLaunch.innerHTML = message
-            }
-            else if (action === 'finished') {
-                const { flavor } = params;
-                const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
-
-                flavorLaunch.innerHTML = 'Refreshing PHP'
-                console.log('Refreshing PHP')
-                await sendMessage('refresh', []);
-
-                flavorLaunch.innerHTML = 'Redirecting'
-                console.log('Redirecting');
-                window.location = `/cgi/${flavor}`
-            }
-            else if (action === 'reload') {
-                console.log('Refreshing PHP')
-                await sendMessage('refresh', []);
-                const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
-                flavorCleanup.innerHTML = 'Reloading'
-                window.location.reload();
-            }
-            else {
-                console.log(data)
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('Waiting for service worker')
-            await navigator.serviceWorker.ready;
-
-            console.log('Checking for existing installs')
-            flavors.forEach(flavor => {
-                console.log(`Checking ${flavor}`)
-                sendMessage('analyzePath', [`/persist/${flavor}`])
-                    .then(checkWww => {
-                        const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
-                        const flavorLaunch = document.querySelector(`[data-launch][data-flavor="${flavor}"]`)
-
-                        if (checkWww.exists) {
-                            flavorCleanup.hidden = false
-                            flavorCleanup.disabled = false
-
-                            flavorLaunch.innerHTML = 'Launch'
-                        } else {
-                            flavorLaunch.innerHTML = 'Install'
-                        }
-                        flavorLaunch.disabled = false
-                    })
-            })
-
-            document.querySelectorAll('[data-launch]').forEach(el => {
-                el.addEventListener('click', launch)
-            })
-            document.querySelectorAll('[data-cleanup]').forEach(el => {
-                el.addEventListener('click', cleanup)
-            })
-        });
-
-        async function cleanup(event ) {
-            if (window.confirm("Your site's data will be completely removed, do you want to continue?")) {
-                const { flavor } = event.target.dataset;
-                const flavorCleanup = document.querySelector(`[data-cleanup][data-flavor="${flavor}"]`)
-                flavorCleanup.hidden = true;
-                flavorCleanup.disabled = true;
-                flavorCleanup.innerHTML = 'Cleaning up'
-
-                worker.postMessage({
-                    action: 'remove',
-                    params: {
-                        flavor
-                    }
-                })
-            }
-        }
-
-        async function launch(event) {
-            this.disabled = true;
-            this.innerHTML = 'Preparing'
-            const { flavor, artifact } = event.target.dataset;
-            console.log('Starting')
-            worker.postMessage({
-                action: 'start',
-                params: {
-                    flavor,
-                    artifact,
-                }
-            })
-        }
-    </script>
 </body>
 
 </html>

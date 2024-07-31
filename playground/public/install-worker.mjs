@@ -142,4 +142,44 @@ onmessage = async ({data }) => {
     else if (action === 'stop') {
         self.close()
     }
+    else if (action === 'export') {
+        const { flavor } = params;
+        await self.navigator.locks.request('export', async () => {
+            postMessage({
+                action: `started`,
+                params,
+                message: 'Preparing to export'
+            })
+            await php.writeFile('/config/flavor.txt', flavor)
+
+            console.log('fetching export code')
+            const exportPhpCode = fetch('/assets/export.php');
+            await php.binary;
+
+            console.log('running export code')
+            const exportPhpExitCode = await php.run(await (await exportPhpCode).text())
+            console.log(exportPhpExitCode)
+
+            await php.unlink('/config/flavor.txt')
+            postMessage({
+                action: `status`,
+                params,
+                message: 'Preparing download'
+            })
+
+            const exportContents = await php.readFile('/persist/export.zip')
+            const blob = new Blob([exportContents], { type: 'application/zip' })
+
+            postMessage({
+                action: `export_finished`,
+                params: {
+                    ...params,
+                    export: blob
+                },
+                message: 'Download ready'
+            })
+            setTimeout(() => php.unlink('/persist/export.zip'), 0)
+
+        })
+    }
 }

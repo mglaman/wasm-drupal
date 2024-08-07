@@ -6,7 +6,6 @@ web/core/themes/*/tests/**/* export-ignore
 web/modules/*/tests/**/* export-ignore
 web/sites/default/files/php export-ignore
 web/core/assets/scaffold export-ignore
-web/core/recipes export-ignore
 
 vendor/*/.github/**/* export-ignore
 vendor/*/*.md export-ignore
@@ -15,8 +14,6 @@ vendor/*/*.lock export-ignore
 vendor/*/tests/**/* export-ignore
 
 # For starshot prototype
-recipes export-ignore
-web/recipes export-ignore
 tests export-ignore
 web/**/*.md export-ignore
 .ddev export-ignore

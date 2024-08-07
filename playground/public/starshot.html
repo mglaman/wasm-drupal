@@ -111,6 +111,13 @@
                 params: {
                     flavor,
                     artifact,
+                    installParameters: {
+                        skip: true,
+                        siteName: 'Try Starshot (prototype)',
+                        profile: 'starshot_installer',
+                        recipes: ['starshot', 'starshot_multilingual'],
+                        langcode: 'en',
+                    }
                 }
             })
         }

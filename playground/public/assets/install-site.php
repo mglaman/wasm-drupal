@@ -9,31 +9,44 @@ set_error_handler(function(...$args) use($stdErr, &$errors){
 $flavor = file_get_contents('/config/flavor.txt');
 $docroot = '/persist/' . $flavor;
 
+$install_params = \json_decode(
+    file_get_contents("/config/$flavor-install-params.json") ?: [],
+    true
+);
+
+$skip_install = $install_params['skip'] ?? false;
+if ($skip_install) {
+    print json_encode([
+        'message' => "Installed",
+        'type' => 'install',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;
+    exit;
+}
+
 $class_loader = require $docroot . '/vendor/autoload.php';
 
 chdir($docroot . '/web');
 
-$install_profile = 'standard';
-$langcode = 'en';
 $site_path = 'sites/default';
 
 // @todo have this written by the worker as JSON and parsed from the disk?
 $parameters = [
     'interactive' => FALSE,
-    'site_path' => $site_path,
+    'site_path' => 'sites/default',
     'parameters' => [
-        'profile' => $install_profile,
-        'langcode' => $langcode,
+        'profile' => $install_params['profile'] ?? 'standard',
+        'recipes' => $install_params['recipes'] ?? [],
+        'langcode' => $install_params['langcode'] ?? 'en',
     ],
     'forms' => [
         'install_settings_form' => [
             'driver' => 'sqlite',
             'sqlite' => [
-                'database' => $site_path . '/files/.sqlite',
+                'database' => 'sites/default/files/.sqlite',
             ],
         ],
         'install_configure_form' => [
-            'site_name' => 'Drupal WASM',
+            'site_name' => $install_params['siteName'],
             'site_mail' => 'drupal@localhost',
             'account' => [
                 'name' => 'admin',
@@ -54,23 +67,34 @@ $parameters = [
 
 require_once 'core/includes/install.core.inc';
 
-install_drupal($class_loader, $parameters, static function ($install_state) {
-    static $started = FALSE;
-    static $finished, $total = 0;
-    if (!$started) {
+try {
+    install_drupal($class_loader, $parameters, static function ($install_state) {
+        static $started = FALSE;
+        static $finished, $total = 0;
+        if (!$started) {
+            print json_encode([
+                    'message' => 'Beginning install tasks',
+                    'type' => 'install',
+                ], JSON_THROW_ON_ERROR) . PHP_EOL;
+
+            $started = TRUE;
+            $total = count(install_tasks_to_perform($install_state));
+        }
         print json_encode([
-                'message' => 'Beginning install tasks',
+                'message' => "Performing install task ($finished / $total)",
                 'type' => 'install',
             ], JSON_THROW_ON_ERROR) . PHP_EOL;
+        $finished++;
+    });
 
-        $started = TRUE;
-        $total = count(install_tasks_to_perform($install_state));
-    }
+    \Drupal::getContainer()->get('module_installer')->uninstall(['big_pipe']);
+
+} catch (\Exception $e) {
     print json_encode([
-            'message' => "Performing install task ($finished / $total)",
-            'type' => 'install',
-        ], JSON_THROW_ON_ERROR) . PHP_EOL;
-    $finished++;
-});
+        'message' => $e->getMessage(),
+        'type' => 'error',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;
+exit(1);
+}
 
 exit;

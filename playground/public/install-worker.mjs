@@ -96,6 +96,13 @@ onmessage = async ({data }) => {
                     params,
                     message: 'Installing site'
                 })
+
+                console.log('Writing install parameters');
+                await php.writeFile(`/config/${flavor}-install-params.json`, JSON.stringify({
+                    langcode: 'en',
+                    ...params.installParameters
+                }))
+
                 console.log('Installing site')
                 const installSiteCode = await (await fetch('/assets/install-site.php')).text();
                 console.log('Executing install site code...')
@@ -109,6 +116,7 @@ onmessage = async ({data }) => {
                 })
                 console.log('Removing archive');
                 await php.unlink('/config/flavor.txt')
+                await php.unlink(`/config/${flavor}-install-params.json`)
                 await php.unlink('/persist/artifact.zip')
 
                 postMessage({

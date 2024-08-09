@@ -68,42 +68,41 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+        const trialManager = document.querySelector('trial-manager');
+        trialManager.addEventListener('resume', () => {
+            console.log('Starting')
+            worker.postMessage({
+                action: 'start',
+                params: {
+                    flavor,
+                    artifact,
+                }
+            })
+        })
+        trialManager.addEventListener('new', () => {
+            worker.postMessage({
+                action: 'remove',
+                params: {
+                    flavor
+                }
+            })
+        })
+        trialManager.addEventListener('export', () => {
+            worker.postMessage({
+                action: 'export',
+                params: {
+                    flavor
+                }
+            })
+        })
+
         console.log('Waiting for service worker')
         await navigator.serviceWorker.ready;
 
         console.log('Checking for existing session')
         const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
         if (checkWww.exists) {
-            const trialManager = document.querySelector('trial-manager');
             trialManager.setAttribute('mode', 'existing_session');
-            trialManager.addEventListener('resume', () => {
-                console.log('Starting')
-                worker.postMessage({
-                    action: 'start',
-                    params: {
-                        flavor,
-                        artifact,
-                    }
-                })
-            })
-            trialManager.addEventListener('new', () => {
-                trialManager.removeAttribute('mode');
-                worker.postMessage({
-                    action: 'remove',
-                    params: {
-                        flavor
-                    }
-                })
-            })
-            trialManager.addEventListener('export', () => {
-                trialManager.removeAttribute('mode');
-                worker.postMessage({
-                    action: 'export',
-                    params: {
-                        flavor
-                    }
-                })
-            })
         } else {
             console.log('Starting')
             worker.postMessage({

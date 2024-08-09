@@ -70,6 +70,7 @@ class TrialManager extends HTMLElement {
         newButton.innerText = 'New session'
         newButton.addEventListener('click', () => {
             if (window.confirm("Your site's data will be completely removed, do you want to continue?")) {
+                this.removeAttribute('mode');
                 this.dispatchEvent(new CustomEvent('new', {
                     composed: true
                 }))
@@ -81,6 +82,7 @@ class TrialManager extends HTMLElement {
         exportButton.id = 'export'
         exportButton.innerText = 'Export'
         exportButton.addEventListener('click', () => {
+            this.removeAttribute('mode');
             this.dispatchEvent(new CustomEvent('export', {
                 composed: true
             }))

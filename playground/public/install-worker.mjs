@@ -206,4 +206,14 @@ onmessage = async ({data }) => {
 
         })
     }
+    else if (action === 'check_existing') {
+        const check = await php.analyzePath(`/persist/${flavor}`)
+        postMessage({
+            action: `check_existing_finished`,
+            params: {
+                exists: check.exists,
+                ...params
+            }
+        })
+    }
 }

@@ -106,8 +106,24 @@ onmessage = async ({data }) => {
                 console.log('Installing site')
                 const installSiteCode = await (await fetch('/assets/install-site.php')).text();
                 console.log('Executing install site code...')
-                const installSiteExitCode = await php.run(installSiteCode);
-                console.log(installSiteExitCode)
+                try {
+                    const installSiteExitCode = await php.run(installSiteCode);
+                    console.log(installSiteExitCode)
+                } catch(e) {
+                    let message = `An error occured. ${e.name}: ${e.message}`
+                    if (e.name === 'RangeError') {
+                        message += ' See https://github.com/mglaman/wasm-drupal/issues/28';
+                    }
+
+                    postMessage({
+                        action: 'status',
+                        type: 'error',
+                        params,
+                        message
+                    })
+                    return;
+                }
+
 
                 postMessage({
                     action: 'status',

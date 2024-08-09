@@ -42,6 +42,7 @@
         else if (action === 'finished') {
             document.querySelector('trial-manager').setAttribute('message', 'Refreshing runtime')
             console.log('Refreshing PHP')
+            // @todo see if refresh really needed.
             await sendMessage('refresh', []);
 
             document.querySelector('trial-manager').setAttribute('message', 'Redirecting to session')
@@ -50,6 +51,7 @@
         }
         else if (action === 'reload') {
             console.log('Refreshing PHP')
+            // @todo see if refresh really needed.
             await sendMessage('refresh', []);
             window.location.reload();
         }
@@ -61,6 +63,25 @@
             link.click();
             URL.revokeObjectURL(link.href);
             document.querySelector('trial-manager').setAttribute('mode', 'existing_session');
+        }
+        else if (action === 'check_existing_finished') {
+            if (data.params.exists) {
+                document.querySelector('trial-manager').setAttribute('mode', 'existing_session');
+            } else {
+                console.log('Starting')
+                worker.postMessage({
+                    action: 'start',
+                    params: {
+                        flavor,
+                        artifact,
+                        installParameters: {
+                            siteName: 'Try Drupal Core',
+                            profile: 'standard',
+                            langcode: 'en',
+                        }
+                    }
+                })
+            }
         }
         else {
             console.log(data)
@@ -96,28 +117,13 @@
             })
         })
 
-        console.log('Waiting for service worker')
-        await navigator.serviceWorker.ready;
-
         console.log('Checking for existing session')
-        const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
-        if (checkWww.exists) {
-            trialManager.setAttribute('mode', 'existing_session');
-        } else {
-            console.log('Starting')
-            worker.postMessage({
-                action: 'start',
-                params: {
-                    flavor,
-                    artifact,
-                    installParameters: {
-                        siteName: 'Try Drupal Core',
-                        profile: 'standard',
-                        langcode: 'en',
-                    }
-                }
-            })
-        }
+        worker.postMessage({
+            action: 'check_existing',
+            params: {
+                flavor
+            }
+        })
     });
 </script>
 </body>

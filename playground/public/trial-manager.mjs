@@ -19,7 +19,6 @@ class TrialManager extends HTMLElement {
     }
 
     connectedCallback() {
-        this.ownerDocument
         this.classList.add('flex', 'flex-col', 'items-center', 'justify-center', 'w-full', 'h-dvh')
         this.render()
     }

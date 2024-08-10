@@ -84,7 +84,7 @@ onmessage = async ({data }) => {
                 })
                 console.log('Extracting archive...')
                 console.log('fetching init code')
-                const initPhpCode = fetch('/assets/init.php');
+                const initPhpCode = fetch('/assets/init.phpcode');
                 await php.binary;
 
                 console.log('running init code')
@@ -104,7 +104,7 @@ onmessage = async ({data }) => {
                 }))
 
                 console.log('Installing site')
-                const installSiteCode = await (await fetch('/assets/install-site.php')).text();
+                const installSiteCode = await (await fetch('/assets/install-site.phpcode')).text();
                 console.log('Executing install site code...')
                 try {
                     const installSiteExitCode = await php.run(installSiteCode);
@@ -177,7 +177,7 @@ onmessage = async ({data }) => {
             await php.writeFile('/config/flavor.txt', flavor)
 
             console.log('fetching export code')
-            const exportPhpCode = fetch('/assets/export.php');
+            const exportPhpCode = fetch('/assets/export.phpcode');
             await php.binary;
 
             console.log('running export code')

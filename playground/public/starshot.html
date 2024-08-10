@@ -7,120 +7,19 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 <body class="bg-drupal-blue h-dvh">
-<trial-manager></trial-manager>
-<script src="/trial-manager.mjs"></script>
+<trial-manager
+        flavor="starshot"
+        artifact="drupal-starshot.zip"
+        skip-install="true"
+        site-name="Try Starshot (prototype)"
+        profile="starshot_installer"
+        recipes="starshot,starshot_multilingual"
+        langcode="en"
+></trial-manager>
+<script src="/trial-manager.mjs" type="module"></script>
 <script type="module">
     import { registerWorker } from './drupal-cgi-worker.mjs'
-    const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
-    const flavor = 'starshot';
-    const artifact = 'drupal-starshot.zip'
-
-    function getInstallWorker() {
-        try {
-            return new Worker('/install-worker.mjs', {
-                type: "module"
-            })
-        } catch {
-            return  new Worker('/install-worker.js')
-        }
-    }
-    const worker = getInstallWorker();
-    worker.onmessage = async ({ data }) => {
-        const { action, message, type } = data;
-
-        if (type === 'error') {
-            worker.postMessage({ action: 'stop' })
-        }
-
-        if (action === 'started') {
-            document.querySelector('trial-manager').setAttribute('mode', 'new_session');
-            document.querySelector('trial-manager').setAttribute('message', 'Starting runtime')
-        }
-        else if (action === 'status') {
-            document.querySelector('trial-manager').setAttribute('message', message)
-        }
-        else if (action === 'finished') {
-            document.querySelector('trial-manager').setAttribute('message', 'Refreshing runtime')
-            console.log('Refreshing PHP')
-            await sendMessage('refresh', []);
-
-            document.querySelector('trial-manager').setAttribute('message', 'Redirecting to session')
-            console.log('Redirecting');
-            window.location = `/cgi/${flavor}`
-        }
-        else if (action === 'reload') {
-            console.log('Refreshing PHP')
-            await sendMessage('refresh', []);
-            window.location.reload();
-        }
-        else if (action === 'export_finished') {
-            document.querySelector('trial-manager').setAttribute('message', message)
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(data.params.export);
-            link.download = 'drupal.zip'
-            link.click();
-            URL.revokeObjectURL(link.href);
-            document.querySelector('trial-manager').setAttribute('mode', 'existing_session');
-        }
-        else {
-            console.log(data)
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        const trialManager = document.querySelector('trial-manager');
-        trialManager.addEventListener('resume', () => {
-            console.log('Starting')
-            worker.postMessage({
-                action: 'start',
-                params: {
-                    flavor,
-                    artifact,
-                }
-            })
-        })
-        trialManager.addEventListener('new', () => {
-            worker.postMessage({
-                action: 'remove',
-                params: {
-                    flavor
-                }
-            })
-        })
-        trialManager.addEventListener('export', () => {
-            worker.postMessage({
-                action: 'export',
-                params: {
-                    flavor
-                }
-            })
-        })
-
-        console.log('Waiting for service worker')
-        await navigator.serviceWorker.ready;
-
-        console.log('Checking for existing session')
-        const checkWww = await sendMessage('analyzePath', [`/persist/${flavor}`])
-        if (checkWww.exists) {
-            trialManager.setAttribute('mode', 'existing_session');
-        } else {
-            console.log('Starting')
-            worker.postMessage({
-                action: 'start',
-                params: {
-                    flavor,
-                    artifact,
-                    installParameters: {
-                        skip: true,
-                        siteName: 'Try Starshot (prototype)',
-                        profile: 'starshot_installer',
-                        recipes: ['starshot', 'starshot_multilingual'],
-                        langcode: 'en',
-                    }
-                }
-            })
-        }
-    });
+    registerWorker(`${window.location.origin}/service-worker.mjs`)
 </script>
 </body>
 </html>

@@ -1,7 +1,24 @@
+import {getBroadcastChannel} from "./drupal-cgi-worker.mjs";
+
 class TrialManager extends HTMLElement {
     static observedAttributes = ['mode', 'message'];
     constructor() {
         super()
+        this.worker = new Worker('/install-worker.mjs', {
+            type: "module"
+        });
+        this.worker.onmessage = this.onMessage.bind(this)
+
+        this.channel = getBroadcastChannel()
+        this.channel.addEventListener('message', ({ data }) => {
+            const { action } = data;
+            if (action === 'service_worker_activated') {
+                this.sendWorkerAction('check_existing', {
+                    flavor: this.flavor
+                })
+            }
+        })
+
         this.spinner = this.initializingEl()
         this.actions = this.actionsEl()
         this.progress = this.progressEl()
@@ -18,17 +35,92 @@ class TrialManager extends HTMLElement {
         }
     }
 
+    get flavor() {
+        return this.getAttribute('flavor')
+    }
+
+    get artifact() {
+        return this.getAttribute('artifact')
+    }
+
     connectedCallback() {
         this.classList.add('flex', 'flex-col', 'items-center', 'justify-center', 'w-full', 'h-dvh')
         this.render()
+        this.sendWorkerAction('check_existing', {
+            flavor: this.flavor
+        })
     }
 
     disconnectedCallback() {
-        console.log("Custom element removed from page.");
+        this.worker.terminate();
     }
 
-    adoptedCallback() {
-        console.log("Custom element moved to new page.");
+    sendWorkerAction(action, params) {
+        this.worker.postMessage({action, params})
+    }
+
+    onMessage({ data }) {
+        const { action, message, type } = data;
+
+        if (type === 'error') {
+            this.worker.postMessage({ action: 'stop' })
+        }
+
+        if (action === 'started') {
+            this.setAttribute('mode', 'new_session');
+            this.setAttribute('message', 'Starting runtime')
+        }
+        else if (action === 'status') {
+            this.setAttribute('message', message)
+        }
+        else if (action === 'finished') {
+            this.setAttribute('message', 'Refreshing runtime')
+            this.channel.postMessage({
+                action: 'refresh'
+            })
+
+            this.setAttribute('message', 'Redirecting to session')
+            console.log('Redirecting');
+            window.location = `/cgi/${this.flavor}`
+        }
+        else if (action === 'reload') {
+            this.channel.postMessage({
+                action: 'refresh'
+            })
+            window.location.reload();
+        }
+        else if (action === 'export_finished') {
+            this.setAttribute('message', message)
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(data.params.export);
+            link.download = 'drupal.zip'
+            link.click();
+            URL.revokeObjectURL(link.href);
+            this.setAttribute('mode', 'existing_session');
+        }
+        else if (action === 'check_existing_finished') {
+            if (data.params.exists) {
+                this.setAttribute('mode', 'existing_session');
+            } else {
+                this.worker.postMessage({
+                    action: 'start',
+                    params: {
+                        flavor: this.flavor,
+                        artifact: this.artifact,
+                        installParameters: {
+                            skip: this.getAttribute('skip-install') || false,
+                            siteName: this.getAttribute('site-name') || 'Try Drupal',
+                            profile: this.getAttribute('profile') || 'standard',
+                            recipes: (this.getAttribute('recipes') || '').split(',').map(i => i.trim()),
+                            langcode: this.getAttribute('langcode') || 'en',
+                        }
+                    }
+                })
+            }
+        }
+        else {
+            console.log(data)
+        }
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -59,9 +151,12 @@ class TrialManager extends HTMLElement {
         resumeButton.id = 'resume';
         resumeButton.innerText = 'Resume session'
         resumeButton.addEventListener('click', () => {
-            this.dispatchEvent(new CustomEvent('resume', {
-                composed: true
-            }))
+            const channel = new BroadcastChannel('my-channel');
+            channel.postMessage('starting')
+            this.sendWorkerAction('start', {
+                flavor: this.flavor,
+                artifact: this.artifact
+            })
         })
 
         const newButton = document.createElement('button');
@@ -71,9 +166,9 @@ class TrialManager extends HTMLElement {
         newButton.addEventListener('click', () => {
             if (window.confirm("Your site's data will be completely removed, do you want to continue?")) {
                 this.removeAttribute('mode');
-                this.dispatchEvent(new CustomEvent('new', {
-                    composed: true
-                }))
+                this.sendWorkerAction('remove', {
+                    flavor: this.flavor
+                })
             }
         })
 
@@ -83,9 +178,9 @@ class TrialManager extends HTMLElement {
         exportButton.innerText = 'Export'
         exportButton.addEventListener('click', () => {
             this.removeAttribute('mode');
-            this.dispatchEvent(new CustomEvent('export', {
-                composed: true
-            }))
+            this.sendWorkerAction('export', {
+                flavor: this.flavor
+            })
         })
 
         wrapper.appendChild(resumeButton)

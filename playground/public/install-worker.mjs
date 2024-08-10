@@ -32,6 +32,7 @@ onmessage = async ({data }) => {
 
     if (action === 'start') {
         await navigator.locks.request('start', async () => {
+            console.log('Starting')
             postMessage({
                 action: `started`,
                 params,
@@ -204,6 +205,18 @@ onmessage = async ({data }) => {
             })
             setTimeout(() => php.unlink('/persist/export.zip'), 0)
 
+        })
+    }
+    else if (action === 'check_existing') {
+        console.log('Checking for existing session')
+        const { flavor } = params;
+        const check = await php.analyzePath(`/persist/${flavor}`)
+        postMessage({
+            action: `check_existing_finished`,
+            params: {
+                exists: check.exists,
+                ...params
+            }
         })
     }
 }

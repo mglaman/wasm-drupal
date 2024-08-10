@@ -11,119 +11,15 @@
 <script src="/trial-manager.mjs"></script>
 <script type="module">
     import { registerWorker } from './drupal-cgi-worker.mjs'
+    import {attachTrialManager, createInstallWorker} from "./utils.mjs";
     const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
     const flavor = 'drupal';
     const artifact = 'drupal-wasm-1.0.zip'
 
-    function getInstallWorker() {
-        try {
-            return new Worker('/install-worker.mjs', {
-                type: "module"
-            })
-        } catch {
-            return  new Worker('/install-worker.js')
-        }
-    }
-    const worker = getInstallWorker();
-    worker.onmessage = async ({ data }) => {
-        const { action, message, type } = data;
-
-        if (type === 'error') {
-            worker.postMessage({ action: 'stop' })
-        }
-
-        if (action === 'started') {
-            document.querySelector('trial-manager').setAttribute('mode', 'new_session');
-            document.querySelector('trial-manager').setAttribute('message', 'Starting runtime')
-        }
-        else if (action === 'status') {
-            document.querySelector('trial-manager').setAttribute('message', message)
-        }
-        else if (action === 'finished') {
-            document.querySelector('trial-manager').setAttribute('message', 'Refreshing runtime')
-            console.log('Refreshing PHP')
-            // @todo see if refresh really needed.
-            await sendMessage('refresh', []);
-
-            document.querySelector('trial-manager').setAttribute('message', 'Redirecting to session')
-            console.log('Redirecting');
-            window.location = `/cgi/${flavor}`
-        }
-        else if (action === 'reload') {
-            console.log('Refreshing PHP')
-            // @todo see if refresh really needed.
-            await sendMessage('refresh', []);
-            window.location.reload();
-        }
-        else if (action === 'export_finished') {
-            document.querySelector('trial-manager').setAttribute('message', message)
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(data.params.export);
-            link.download = 'drupal.zip'
-            link.click();
-            URL.revokeObjectURL(link.href);
-            document.querySelector('trial-manager').setAttribute('mode', 'existing_session');
-        }
-        else if (action === 'check_existing_finished') {
-            if (data.params.exists) {
-                document.querySelector('trial-manager').setAttribute('mode', 'existing_session');
-            } else {
-                console.log('Starting')
-                worker.postMessage({
-                    action: 'start',
-                    params: {
-                        flavor,
-                        artifact,
-                        installParameters: {
-                            siteName: 'Try Drupal Core',
-                            profile: 'standard',
-                            langcode: 'en',
-                        }
-                    }
-                })
-            }
-        }
-        else {
-            console.log(data)
-        }
-    }
-
+    const worker = createInstallWorker(flavor, artifact, sendMessage)
     document.addEventListener('DOMContentLoaded', async () => {
         const trialManager = document.querySelector('trial-manager');
-        trialManager.addEventListener('resume', () => {
-            console.log('Starting')
-            worker.postMessage({
-                action: 'start',
-                params: {
-                    flavor,
-                    artifact,
-                }
-            })
-        })
-        trialManager.addEventListener('new', () => {
-            worker.postMessage({
-                action: 'remove',
-                params: {
-                    flavor
-                }
-            })
-        })
-        trialManager.addEventListener('export', () => {
-            worker.postMessage({
-                action: 'export',
-                params: {
-                    flavor
-                }
-            })
-        })
-
-        console.log('Checking for existing session')
-        worker.postMessage({
-            action: 'check_existing',
-            params: {
-                flavor
-            }
-        })
+        attachTrialManager(trialManager, worker, flavor, artifact)
     });
 </script>
 </body>

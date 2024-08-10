@@ -7,31 +7,19 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 <body class="bg-drupal-blue h-dvh">
-<trial-manager></trial-manager>
-<script src="/trial-manager.mjs"></script>
+<trial-manager
+        flavor="starshot"
+        artifact="drupal-starshot.zip"
+        skip-install="true"
+        site-name="Try Starshot (prototype)"
+        profile="starshot_installer"
+        recipes="starshot,starshot_multilingual"
+        langcode="en"
+></trial-manager>
+<script src="/trial-manager.mjs" type="module"></script>
 <script type="module">
     import { registerWorker } from './drupal-cgi-worker.mjs'
-    import {attachTrialManager, createInstallWorker} from "./utils.mjs";
-    const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
-    const flavor = 'starshot';
-    const artifact = 'drupal-starshot.zip'
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        const worker = createInstallWorker(sendMessage, {
-            flavor,
-            artifact,
-            installParameters: {
-                skip: true,
-                siteName: 'Try Starshot (prototype)',
-                profile: 'starshot_installer',
-                recipes: ['starshot', 'starshot_multilingual'],
-                langcode: 'en',
-            }
-        })
-
-        const trialManager = document.querySelector('trial-manager');
-        attachTrialManager(trialManager, worker, flavor, artifact)
-    });
+    registerWorker(`${window.location.origin}/service-worker.mjs`)
 </script>
 </body>
 </html>

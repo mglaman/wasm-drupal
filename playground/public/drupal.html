@@ -7,29 +7,17 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 <body class="bg-drupal-blue h-dvh">
-<trial-manager></trial-manager>
-<script src="/trial-manager.mjs"></script>
+<trial-manager
+        flavor="drupal"
+        artifact="drupal-wasm-1.0.zip"
+        site-name="Try Drupal Core"
+        profile="standard"
+        langcode="en"
+></trial-manager>
+<script src="/trial-manager.mjs" type="module"></script>
 <script type="module">
     import { registerWorker } from './drupal-cgi-worker.mjs'
-    import {attachTrialManager, createInstallWorker} from "./utils.mjs";
-    const sendMessage = registerWorker(`${window.location.origin}/service-worker.mjs`)
-    const flavor = 'drupal';
-    const artifact = 'drupal-wasm-1.0.zip'
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        const worker = createInstallWorker(sendMessage, {
-            flavor,
-            artifact,
-            installParameters: {
-                siteName: 'Try Drupal Core',
-                profile: 'standard',
-                langcode: 'en',
-            }
-        })
-
-        const trialManager = document.querySelector('trial-manager');
-        attachTrialManager(trialManager, worker, flavor, artifact)
-    });
+    registerWorker(`${window.location.origin}/service-worker.mjs`)
 </script>
 </body>
 </html>

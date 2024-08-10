@@ -86,3 +86,7 @@ export function registerWorker(serviceWorkerUrl) {
 
     return sendMessage
 }
+
+export function getBroadcastChannel() {
+    return new BroadcastChannel('drupal-cgi-worker');
+}

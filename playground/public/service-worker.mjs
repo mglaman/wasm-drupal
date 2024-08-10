@@ -1,6 +1,6 @@
-import {setUpWorker} from "./drupal-cgi-worker.mjs";
+import {getBroadcastChannel, setUpWorker} from "./drupal-cgi-worker.mjs";
 
-setUpWorker(
+const php = setUpWorker(
     self,
     '/cgi/',
     '/persist/www',
@@ -18,6 +18,19 @@ setUpWorker(
     ]
 )
 
+const channel = getBroadcastChannel()
+channel.addEventListener('message', ({ data }) => {
+    const { action } = data;
+    if (action === 'refresh') {
+        console.log('Refreshing CGI')
+        php.refresh();
+    }
+})
+
 // Extras
 self.addEventListener('install', () => console.log('Install'));
-self.addEventListener('activate', () => console.log('Activate'));
+self.addEventListener('activate', () => {
+    channel.postMessage({
+        action: 'service_worker_activated'
+    })
+});

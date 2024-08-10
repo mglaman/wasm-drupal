@@ -16,7 +16,15 @@
     const flavor = 'drupal';
     const artifact = 'drupal-wasm-1.0.zip'
 
-    const worker = createInstallWorker(flavor, artifact, sendMessage)
+    const worker = createInstallWorker(sendMessage, {
+        flavor,
+        artifact,
+        installParameters: {
+            siteName: 'Try Drupal Core',
+            profile: 'standard',
+            langcode: 'en',
+        }
+    })
     document.addEventListener('DOMContentLoaded', async () => {
         const trialManager = document.querySelector('trial-manager');
         attachTrialManager(trialManager, worker, flavor, artifact)

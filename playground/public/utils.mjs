@@ -15,7 +15,7 @@ export function attachTrialManager(el, worker, flavor, artifact) {
     installWorkerAction(worker, 'check_existing', {flavor})
 }
 
-export function createInstallWorker(flavor, artifact, sendMessage) {
+export function createInstallWorker(sendMessage, startParameters) {
     const worker = new Worker('/install-worker.mjs', {
         type: "module"
     });
@@ -40,7 +40,7 @@ export function createInstallWorker(flavor, artifact, sendMessage) {
 
             document.querySelector('trial-manager').setAttribute('message', 'Redirecting to session')
             console.log('Redirecting');
-            window.location = `/cgi/${flavor}`
+            window.location = `/cgi/${startParameters.flavor}`
         }
         else if (action === 'reload') {
             console.log('Refreshing PHP')
@@ -62,15 +62,7 @@ export function createInstallWorker(flavor, artifact, sendMessage) {
             } else {
                 worker.postMessage({
                     action: 'start',
-                    params: {
-                        flavor,
-                        artifact,
-                        installParameters: {
-                            siteName: 'Try Drupal Core',
-                            profile: 'standard',
-                            langcode: 'en',
-                        }
-                    }
+                    params: startParameters
                 })
             }
         }

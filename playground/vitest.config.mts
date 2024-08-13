@@ -7,6 +7,9 @@ export default defineConfig({
             provider: 'v8',
             reporter: ['text'],
             include: [
+                'public/drupal-cgi-worker.mjs',
+                'public/install-worker.mjs',
+                'public/service-worker.mjs',
                 'public/trial-manager.mjs'
             ],
         }

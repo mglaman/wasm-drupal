@@ -10,15 +10,17 @@ function createMockWorker() {
     return mock
 }
 
-function createTrialManager(flavor) {
+function createTrialManager(flavor, artifact = 'drupal.zip') {
     const sut = new TrialManager();
     sut.flavor = flavor;
+    sut.artifact = artifact
     return sut;
 }
 
 describe('TrialManager', () => {
     afterEach(() => {
         vi.unstubAllGlobals()
+        vi.restoreAllMocks()
     })
 
     it('custom element is defined', () => {
@@ -42,6 +44,69 @@ describe('TrialManager', () => {
         vi.waitFor(() => {
             expect(worker.postMessage).toHaveBeenCalledTimes(1)
         })
+    })
+
+    it('allows export', () => {
+        const worker = createMockWorker()
+        worker.postMessage.mockImplementation(({ action, params }) => {
+            expect(['check_existing', 'export']).toContain(action)
+            if (action === 'check_existing') {
+                worker.onmessage({
+                    data: {
+                        action: `check_existing_finished`,
+                        params: {
+                            exists: true,
+                        }
+                    }
+                })
+            } else {
+                expect(action).toBe('export')
+                expect(params).toStrictEqual({ flavor: 'bar' })
+            }
+        })
+
+        const sut = createTrialManager('bar')
+        sut.mode = 'existing_session';
+        document.body.appendChild(sut);
+        document.getElementById('export').click()
+        expect(worker.postMessage).toHaveBeenCalledTimes(2)
+        expect(sut.mode).toStrictEqual(null)
+    })
+
+    it('allows resuming session', () => {
+        const worker = createMockWorker()
+        worker.postMessage.mockImplementation(({ action, params }) => {
+            expect(['check_existing', 'start']).toContain(action)
+            if (action === 'check_existing') {
+                worker.onmessage({
+                    data: {
+                        action: `check_existing_finished`,
+                        params: {
+                            exists: true,
+                        }
+                    }
+                })
+            } else {
+                expect(action).toBe('start')
+                expect(params).toStrictEqual({ flavor: 'bar', artifact: 'baz.zip' })
+                worker.onmessage({
+                    data: {
+                        action: `started`,
+                        params: {
+                            message: 'Starting',
+                        }
+                    }
+                })
+            }
+        })
+
+        const sut = createTrialManager('bar', 'baz.zip')
+        sut.mode = 'existing_session';
+        document.body.appendChild(sut);
+        document.getElementById('resume').click()
+        expect(worker.postMessage).toHaveBeenCalledTimes(2)
+        expect(sut.mode).toStrictEqual('new_session')
+        expect(sut.message).toStrictEqual('Starting runtime')
     })
 
     it('changes state based on the mode', () => {
@@ -92,7 +157,7 @@ describe('TrialManager', () => {
             }
             else {
                 expect(params).toStrictEqual({
-                    artifact: null,
+                    artifact: 'drupal.zip',
                     flavor: 'foo',
                     installParameters: {
                         langcode: 'en',
@@ -120,5 +185,23 @@ describe('TrialManager', () => {
         const sut = document.body.appendChild(createTrialManager());
         document.body.removeChild(sut)
         expect(worker.terminate).toHaveBeenCalledTimes(1)
+    })
+
+    it('stops worker on error', () => {
+        const worker = createMockWorker()
+        worker.postMessage.mockImplementation(({ action, params }) => {
+            expect(action).toBe('stop')
+        })
+        const sut = createTrialManager('foo');
+
+        worker.onmessage({
+            data: {
+                action: 'status',
+                type: 'error',
+                message: 'barbaz',
+            }
+        })
+        expect(worker.postMessage).toHaveBeenCalledTimes(1)
+        expect(sut.message).toStrictEqual('barbaz')
     })
 })

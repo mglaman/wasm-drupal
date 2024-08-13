@@ -55,6 +55,10 @@ export default class TrialManager extends HTMLElement {
         return this.getAttribute('artifact')
     }
 
+    set artifact(artifact) {
+        this.setAttribute('artifact', artifact)
+    }
+
     get recipes() {
         if (this.hasAttribute('recipes')) {
             return this.getAttribute('recipes').split(',').map(i => i.trim())
@@ -177,8 +181,6 @@ export default class TrialManager extends HTMLElement {
         resumeButton.id = 'resume';
         resumeButton.innerText = 'Resume session'
         resumeButton.addEventListener('click', () => {
-            const channel = new BroadcastChannel('my-channel');
-            channel.postMessage('starting')
             this.sendWorkerAction('start', {
                 flavor: this.flavor,
                 artifact: this.artifact

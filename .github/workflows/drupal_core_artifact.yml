@@ -30,7 +30,7 @@ jobs:
           cp web/sites/default/default.settings.php web/sites/default/settings.php
           echo "include \$app_root . '/' . \$site_path . '/settings.local.php';" >> web/sites/default/settings.php
 
-      - run: composer archive --format=zip --file=drupal-core
+      - run: cd drupal-core && composer archive --format=zip --file=drupal-core
       - name: Upload prototype archive
         uses: actions/upload-artifact@v4
         with:

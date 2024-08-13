@@ -1,6 +1,6 @@
 import {getBroadcastChannel} from "./drupal-cgi-worker.mjs";
 
-class TrialManager extends HTMLElement {
+export default class TrialManager extends HTMLElement {
     static observedAttributes = ['mode', 'message'];
     constructor() {
         super()
@@ -25,7 +25,7 @@ class TrialManager extends HTMLElement {
     }
 
     render() {
-        const mode = this.getAttribute('mode');
+        const mode = this.mode;
         if (!mode) {
             this.replaceChildren(this.spinner)
         } else if (mode === 'new_session') {
@@ -35,12 +35,43 @@ class TrialManager extends HTMLElement {
         }
     }
 
+    get mode() {
+        return this.getAttribute('mode')
+    }
+
+    set mode(mode) {
+        this.setAttribute('mode', mode)
+    }
+
     get flavor() {
         return this.getAttribute('flavor')
     }
 
+    set flavor(flavor) {
+        this.setAttribute('flavor', flavor || '')
+    }
+
     get artifact() {
         return this.getAttribute('artifact')
+    }
+
+    set artifact(artifact) {
+        this.setAttribute('artifact', artifact)
+    }
+
+    get recipes() {
+        if (this.hasAttribute('recipes')) {
+            return this.getAttribute('recipes').split(',').map(i => i.trim())
+        }
+        return [];
+    }
+
+    get message() {
+        return this.getAttribute('message') || '';
+    }
+
+    set message(message) {
+        this.setAttribute('message', message)
     }
 
     connectedCallback() {
@@ -80,7 +111,6 @@ class TrialManager extends HTMLElement {
             })
 
             this.setAttribute('message', 'Redirecting to session')
-            console.log('Redirecting');
             window.location = `/cgi/${this.flavor}`
         }
         else if (action === 'reload') {
@@ -111,7 +141,7 @@ class TrialManager extends HTMLElement {
                             skip: this.getAttribute('skip-install') || false,
                             siteName: this.getAttribute('site-name') || 'Try Drupal',
                             profile: this.getAttribute('profile') || 'standard',
-                            recipes: (this.getAttribute('recipes') || '').split(',').map(i => i.trim()),
+                            recipes: this.recipes,
                             langcode: this.getAttribute('langcode') || 'en',
                         }
                     }
@@ -151,8 +181,6 @@ class TrialManager extends HTMLElement {
         resumeButton.id = 'resume';
         resumeButton.innerText = 'Resume session'
         resumeButton.addEventListener('click', () => {
-            const channel = new BroadcastChannel('my-channel');
-            channel.postMessage('starting')
             this.sendWorkerAction('start', {
                 flavor: this.flavor,
                 artifact: this.artifact
@@ -192,7 +220,7 @@ class TrialManager extends HTMLElement {
     progressEl() {
         const progress = document.createElement('div')
         progress.classList.add('rounded-md', 'p-4', 'bg-white', 'w-96', 'text-center')
-        progress.innerText = this.getAttribute('message')
+        progress.innerText = this.message
         return progress
     }
 }

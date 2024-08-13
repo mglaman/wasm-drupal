@@ -26,6 +26,9 @@ playground-build:
 	cd playground && npm install
 	cd playground && npm run build
 
+playground-test:
+	cd playground && npm run test
+
 clean:
 	cd drupal-src && git clean -fdx
 	cd playground && git clean -fdx

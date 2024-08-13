@@ -20,6 +20,8 @@ jobs:
           node-version: "22"
       - name: "build"
         run: make playground-build
+      - name: "test"
+        run: make playground-test
       - name: Upload playground archive
         uses: actions/upload-artifact@v4
         with:

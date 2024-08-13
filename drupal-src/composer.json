@@ -47,7 +47,7 @@
             },
             "file-mapping": {
                 "[project-root]/.gitattributes": {
-                    "append": "patches/.gitattributes"
+                    "append": "../patches/.gitattributes"
                 }
             }
         },
@@ -103,8 +103,8 @@
         },
         "patches": {
             "drupal/core": {
-                "Remove Fibers from Renderer": "./patches/renderer-remove-fibers.patch",
-                "Remove file_system service usage from SQLite installer": "./patches/sqlite-file_system-service.patch"
+                "Remove Fibers from Renderer": "../patches/renderer-remove-fibers.patch",
+                "Remove file_system service usage from SQLite installer": "../patches/sqlite-file_system-service.patch"
             }
         }
     }

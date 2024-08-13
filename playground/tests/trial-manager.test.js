@@ -21,6 +21,7 @@ describe('TrialManager', () => {
     afterEach(() => {
         vi.unstubAllGlobals()
         vi.restoreAllMocks()
+        document.body.replaceChildren()
     })
 
     it('custom element is defined', () => {
@@ -28,6 +29,23 @@ describe('TrialManager', () => {
         document.body.appendChild(createTrialManager());
         expect(document.querySelector('trial-manager')).toBeTruthy();
     });
+
+    it('changes state based on the mode', () => {
+        createMockWorker()
+        const sut = createTrialManager('bar')
+        document.body.appendChild(sut);
+        expect(sut.getInnerHTML()).toContain('<svg')
+        sut.mode = 'new_session'
+        expect(sut.getInnerHTML()).not.toContain('<svg')
+        sut.message = 'foobar';
+        expect(sut.getInnerHTML()).toContain('foobar')
+        sut.mode = 'existing_session';
+        expect(sut.message).toBe('')
+        expect(sut.getInnerHTML()).not.toContain('foobar')
+        expect(sut.getInnerHTML()).toContain('Resume session')
+        expect(sut.getInnerHTML()).toContain('New session')
+        expect(sut.getInnerHTML()).toContain('Export')
+    })
 
     it('handles broadcast message for sw activation', () => {
         const worker = createMockWorker()
@@ -46,10 +64,15 @@ describe('TrialManager', () => {
         })
     })
 
-    it('allows export', () => {
+    it.each([
+        ['resume', 'start', { flavor: 'bar', artifact: 'baz.zip' }, 'started', 'new_session'],
+        ['export', 'export', { flavor: 'bar' }, 'started', 'new_session'],
+        ['new', 'remove', { flavor: 'bar' }, 'reload', null]
+    ])('button %s interacts with worker', (buttonId, buttonAction, expectedParams, workerAction, endMode) => {
+        vi.stubGlobal('confirm', vi.fn().mockImplementation(() => true))
         const worker = createMockWorker()
         worker.postMessage.mockImplementation(({ action, params }) => {
-            expect(['check_existing', 'export']).toContain(action)
+            expect(['check_existing', buttonAction]).toContain(action)
             if (action === 'check_existing') {
                 worker.onmessage({
                     data: {
@@ -60,41 +83,11 @@ describe('TrialManager', () => {
                     }
                 })
             } else {
-                expect(action).toBe('export')
-                expect(params).toStrictEqual({ flavor: 'bar' })
-            }
-        })
-
-        const sut = createTrialManager('bar')
-        sut.mode = 'existing_session';
-        document.body.appendChild(sut);
-        document.getElementById('export').click()
-        expect(worker.postMessage).toHaveBeenCalledTimes(2)
-        expect(sut.mode).toStrictEqual(null)
-    })
-
-    it('allows resuming session', () => {
-        const worker = createMockWorker()
-        worker.postMessage.mockImplementation(({ action, params }) => {
-            expect(['check_existing', 'start']).toContain(action)
-            if (action === 'check_existing') {
+                expect(action).toBe(buttonAction)
+                expect(params).toStrictEqual(expectedParams)
                 worker.onmessage({
                     data: {
-                        action: `check_existing_finished`,
-                        params: {
-                            exists: true,
-                        }
-                    }
-                })
-            } else {
-                expect(action).toBe('start')
-                expect(params).toStrictEqual({ flavor: 'bar', artifact: 'baz.zip' })
-                worker.onmessage({
-                    data: {
-                        action: `started`,
-                        params: {
-                            message: 'Starting',
-                        }
+                        action: workerAction,
                     }
                 })
             }
@@ -103,27 +96,9 @@ describe('TrialManager', () => {
         const sut = createTrialManager('bar', 'baz.zip')
         sut.mode = 'existing_session';
         document.body.appendChild(sut);
-        document.getElementById('resume').click()
+        document.getElementById(buttonId).click()
         expect(worker.postMessage).toHaveBeenCalledTimes(2)
-        expect(sut.mode).toStrictEqual('new_session')
-        expect(sut.message).toStrictEqual('Starting runtime')
-    })
-
-    it('changes state based on the mode', () => {
-        createMockWorker()
-        const sut = createTrialManager('bar')
-        document.body.appendChild(sut);
-        expect(sut.getInnerHTML()).toContain('<svg')
-        sut.mode = 'new_session'
-        expect(sut.getInnerHTML()).not.toContain('<svg')
-        sut.message = 'foobar';
-        expect(sut.getInnerHTML()).toContain('foobar')
-        sut.mode = 'existing_session';
-        expect(sut.message).toBe('')
-        expect(sut.getInnerHTML()).not.toContain('foobar')
-        expect(sut.getInnerHTML()).toContain('Resume session')
-        expect(sut.getInnerHTML()).toContain('New session')
-        expect(sut.getInnerHTML()).toContain('Export')
+        expect(sut.mode).toStrictEqual(endMode)
     })
 
     it.each([
@@ -189,7 +164,7 @@ describe('TrialManager', () => {
 
     it('stops worker on error', () => {
         const worker = createMockWorker()
-        worker.postMessage.mockImplementation(({ action, params }) => {
+        worker.postMessage.mockImplementation(({ action }) => {
             expect(action).toBe('stop')
         })
         const sut = createTrialManager('foo');

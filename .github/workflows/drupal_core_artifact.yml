@@ -36,7 +36,7 @@ jobs:
         with:
           name: drupal-core
           path: |
-            drupal-core.zip
+            rupal-core/drupal-core.zip
       - name: "configure AWS"
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -44,6 +44,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Upload artifact
-        run: aws s3 cp drupal-core.zip s3://wasm-drupal/assets/drupal-core.zip
+        run: aws s3 cp rupal-core/drupal-core.zip s3://wasm-drupal/assets/drupal-core.zip
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ENEVO72R9T6H5 --paths "/assets/drupal-core.zip"

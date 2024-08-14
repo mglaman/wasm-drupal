@@ -14,6 +14,11 @@ const php = setUpWorker(
             pathPrefix: '/cgi/starshot',
             directory: '/persist/starshot/web',
             entrypoint: 'index.php',
+        },
+        {
+            pathPrefix: '/cgi/cms',
+            directory: '/persist/cms/web',
+            entrypoint: 'index.php',
         }
     ]
 )

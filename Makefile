@@ -1,6 +1,6 @@
 PWD = $(shell pwd)
 
-build: playground-build copy-playground-archive
+build: download-artifacts playground-build
 
 serve:
 	docker run --rm -p 80:80 \
@@ -8,19 +8,10 @@ serve:
 		-v ${PWD}/playground/public:/usr/share/caddy \
 		caddy
 
-drupal-update:
-	cd drupal-src && composer update --ignore-platform-reqs
-
-drupal-build:
-	cd drupal-src && composer install --ignore-platform-reqs
-
-drupal-archive: drupal-build
-	cd drupal-src && composer archive --format=zip
-	mv drupal-src/drupal-wasm-1.0.zip .
-
-copy-playground-archive: drupal-archive
-	rm -f playground/public/assets/drupal-wasm-1.0.zip
-	mv drupal-wasm-1.0.zip playground/public/assets
+download-artifacts:
+	curl https://wasm-drupal.mglaman.dev/assets/drupal-core.zip -o playground/public/assets/drupal-core.zip
+	curl https://wasm-drupal.mglaman.dev/assets/drupal-starshot.zip -o playground/public/assets/drupal-starhot.zip
+	curl https://git.drupalcode.org/api/v4/projects/157093/jobs/artifacts/0.x/download?job=trial -o playground/public/assets/drupal-cms.zip
 
 playground-build:
 	cd playground && npm install
@@ -30,5 +21,4 @@ playground-test:
 	cd playground && npm run test
 
 clean:
-	cd drupal-src && git clean -fdx
 	cd playground && git clean -fdx

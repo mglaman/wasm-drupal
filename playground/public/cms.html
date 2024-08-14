@@ -3,15 +3,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Try Drupal Core</title>
+    <title>Try Drupal CMS</title>
     <link href="styles.css" rel="stylesheet">
 </head>
 <body class="bg-drupal-blue h-dvh">
 <trial-manager
-        flavor="drupal"
-        artifact="drupal-core.zip"
-        site-name="Try Drupal Core"
-        profile="standard"
+        flavor="cms"
+        artifact="drupal-cms.zip"
+        skip-install="true"
+        site-name="Try Drupal CMS"
+        profile="drupal_cms_installer"
+        recipes="drupal_cms,drupal_cms_multilingual"
         langcode="en"
 ></trial-manager>
 <script src="/trial-manager.mjs" type="module"></script>

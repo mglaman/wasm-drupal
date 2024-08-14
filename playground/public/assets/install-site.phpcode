@@ -40,7 +40,7 @@ $parameters = [
     ],
     'forms' => [
         'install_settings_form' => [
-            'driver' => 'sqlite',
+            'driver' => 'Drupal\sqlite\Driver\Database\sqlite',
             'sqlite' => [
                 'database' => 'sites/default/files/.sqlite',
             ],

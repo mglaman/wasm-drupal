@@ -24,6 +24,9 @@ jobs:
           composer config --merge --json 'extra.patches.drupal/core' '{"Remove Fibers from Renderer": "../patches/renderer-remove-fibers.patch"}'
           composer config --merge --json 'extra.patches.drupal/core' '{"Remove file_system service usage from SQLite installer": "../patches/sqlite-file_system-service.patch"}'
 
+          composer require cweagans/composer-patches --no-install
+          composer config --no-plugins allow-plugins.cweagans/composer-patches true
+
           composer install --no-dev
 
           cp web/sites/example.settings.local.php web/sites/default/settings.local.php

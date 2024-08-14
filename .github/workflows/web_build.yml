@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - '.github/workflows/web_build.yml'
-      - 'playground/**'
 jobs:
   web_build:
     name: "Build artifact"
@@ -19,11 +16,11 @@ jobs:
         with:
           node-version: "22"
       - name: "build"
-        run: make playground-build
+        run: make demo-build
       - name: "test"
-        run: make playground-test
-      - name: Upload playground archive
+        run: make demo-test
+      - name: Upload demo archive
         uses: actions/upload-artifact@v4
         with:
-          name: playground
-          path: playground/public
+          name: demo
+          path: public

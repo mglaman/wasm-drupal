@@ -11,7 +11,7 @@ serve:
 download-artifacts:
 	curl https://wasm-drupal.mglaman.dev/assets/drupal-core.zip -o playground/public/assets/drupal-core.zip
 	curl https://wasm-drupal.mglaman.dev/assets/drupal-starshot.zip -o playground/public/assets/drupal-starhot.zip
-	curl https://git.drupalcode.org/api/v4/projects/157093/jobs/artifacts/0.x/download?job=trial -o playground/public/assets/drupal-cms.zip
+	curl https://git.drupalcode.org/api/v4/projects/157093/jobs/artifacts/0.x/raw/trial.zip?job=trial -o playground/public/assets/drupal-cms.zip
 
 playground-build:
 	cd playground && npm install

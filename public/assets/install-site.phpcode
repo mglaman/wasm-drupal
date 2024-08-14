@@ -14,6 +14,15 @@ $install_params = \json_decode(
     true
 );
 
+chdir($docroot . '/web');
+
+if (!is_dir('sites/default/files/css') && !mkdir('sites/default/files/css') && !is_dir('sites/default/files/css')) {
+    throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/css'));
+}
+if (!is_dir('sites/default/files/js') && !mkdir('sites/default/files/js') && !is_dir('sites/default/files/js')) {
+    throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/js'));
+}
+
 $skip_install = $install_params['skip'] ?? false;
 if ($skip_install) {
     print json_encode([
@@ -25,9 +34,6 @@ if ($skip_install) {
 
 $class_loader = require $docroot . '/vendor/autoload.php';
 
-chdir($docroot . '/web');
-
-$site_path = 'sites/default';
 
 // @todo have this written by the worker as JSON and parsed from the disk?
 $parameters = [

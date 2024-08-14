@@ -1,24 +1,24 @@
 PWD = $(shell pwd)
 
-build: download-artifacts playground-build
+build: download-artifacts demo-build
 
 serve:
 	docker run --rm -p 80:80 \
-		-v ${PWD}/playground/Caddyfile:/etc/caddy/Caddyfile \
-		-v ${PWD}/playground/public:/usr/share/caddy \
+		-v ${PWD}/Caddyfile:/etc/caddy/Caddyfile \
+		-v ${PWD}/public:/usr/share/caddy \
 		caddy
 
 download-artifacts:
-	curl https://wasm-drupal.mglaman.dev/assets/drupal-core.zip -o playground/public/assets/drupal-core.zip
-	curl https://wasm-drupal.mglaman.dev/assets/drupal-starshot.zip -o playground/public/assets/drupal-starhot.zip
-	curl https://git.drupalcode.org/api/v4/projects/157093/jobs/artifacts/0.x/download?job=trial -o playground/public/assets/drupal-cms.zip
+	curl -o public/assets/drupal-core.zip	 https://wasm-drupal.mglaman.dev/assets/drupal-core.zip
+	curl -o public/assets/drupal-starhot.zip https://wasm-drupal.mglaman.dev/assets/drupal-starshot.zip
+	curl -o public/assets/drupal-cms.zip	 https://git.drupalcode.org/api/v4/projects/157093/jobs/artifacts/0.x/download?job=trial
 
-playground-build:
-	cd playground && npm install
-	cd playground && npm run build
+demo-build:
+	npm install
+	npm run build
 
-playground-test:
-	cd playground && npm run test
+demo-test:
+	npm run test
 
 clean:
-	cd playground && git clean -fdx
+	git clean -fdx

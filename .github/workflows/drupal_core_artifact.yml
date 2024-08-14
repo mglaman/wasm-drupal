@@ -17,7 +17,7 @@ jobs:
           coverage: "none"
           php-version: "8.3"
       - run: |
-          composer create-project drupal/recommended-project drupal-core --no-install
+          composer create-project drupal/recommended-project:^10 drupal-core --no-install
       - run: |
           cd drupal-core
           composer config --merge --json 'extra.drupal-scaffold.file-mapping' '{"[project-root]/.gitattributes": {"append": "../patches/.gitattributes"}}'

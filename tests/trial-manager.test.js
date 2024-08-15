@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import TrialManager from "../public/trial-manager.mjs";
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import TrialManager, { defineTrialManagerElement } from "../public/trial-manager.mjs";
 
 function createMockWorker() {
     const mock = {
@@ -18,6 +18,9 @@ function createTrialManager(flavor, artifact = 'drupal.zip') {
 }
 
 describe('TrialManager', () => {
+    beforeEach(() => {
+        defineTrialManagerElement()
+    })
     afterEach(() => {
         vi.unstubAllGlobals()
         vi.restoreAllMocks()

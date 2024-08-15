@@ -81,10 +81,9 @@ export function setUpWorker(worker, prefix, docroot) {
             const vHostExists = settings.vHosts.find(existing => existing.pathPrefix === vHost.pathPrefix);
 
             if (!vHostExists) {
-                console.log('Setting virtual host')
-                console.log(vHost)
                 settings.vHosts.push(vHost)
                 await php.setSettings(settings)
+                await php.storeInit()
             }
         }
     })

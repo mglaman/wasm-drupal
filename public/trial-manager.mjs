@@ -225,4 +225,6 @@ export default class TrialManager extends HTMLElement {
     }
 }
 
-customElements.get('trial-manager') || customElements.define('trial-manager', TrialManager)
+export function defineTrialManagerElement() {
+    customElements.get('trial-manager') || customElements.define('trial-manager', TrialManager)
+}

@@ -1,23 +1,23 @@
-const path = require('path')
+const path = require("path");
 
 module.exports = {
-  mode: 'production',
+  mode: "production",
   module: {
     rules: [
       {
-		test: /\.mjs$/,
-		exclude: /node_modules/,
-		use: { loader: "babel-loader" }
-      },
+        test: /\.mjs$/,
+        exclude: /node_modules/,
+        use: { loader: "babel-loader" }
+      }
     ]
   },
   entry: {
-    'service-worker': './public/service-worker.mjs',
-    'install-worker': './public/install-worker.mjs',
+    "service-worker": "./public/service-worker.mjs",
+    "install-worker": "./public/install-worker.mjs"
   },
   output: {
-    path: path.resolve(__dirname, 'public'),
-    filename: '[name].js',
+    path: path.resolve(__dirname, "public"),
+    filename: "[name].js"
   },
-  target: 'webworker',
+  target: "webworker"
 };

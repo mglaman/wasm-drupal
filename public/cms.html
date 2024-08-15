@@ -16,9 +16,11 @@
         recipes="drupal_cms,drupal_cms_multilingual"
         langcode="en"
 ></trial-manager>
-<script src="/trial-manager.mjs" type="module"></script>
 <script type="module">
     import { registerWorker } from './drupal-cgi-worker.mjs'
+    import { defineTrialManagerElement } from "./trial-manager.mjs";
+
+    defineTrialManagerElement()
     registerWorker(`${window.location.origin}/service-worker.mjs`)
 </script>
 </body>

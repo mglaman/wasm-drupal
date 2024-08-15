@@ -1,5 +1,5 @@
-import { sendMessageFor, onMessage } from './msg-bus.mjs';
-import {PhpCgiWorker} from "./PhpCgiWorker.mjs";
+import { onMessage, sendMessageFor } from "./msg-bus.mjs";
+import { PhpCgiWorker } from "./PhpCgiWorker.mjs";
 
 const onRequest = (request, response) => {
     const url = new URL(request.url);
@@ -103,7 +103,6 @@ export function setUpWorker(worker, prefix, docroot) {
 }
 
 export function registerWorker(serviceWorkerUrl) {
-    const sendMessage = sendMessageFor(serviceWorkerUrl)
     const serviceWorker = navigator.serviceWorker;
     serviceWorker.register(`/service-worker.mjs`, {
         type: "module"
@@ -118,7 +117,7 @@ export function registerWorker(serviceWorkerUrl) {
         });
     serviceWorker.addEventListener('message', onMessage);
 
-    return sendMessage
+    return sendMessageFor(serviceWorkerUrl)
 }
 
 export function getBroadcastChannel() {

@@ -52,14 +52,16 @@ export class DrupalCgiWorker extends PhpCgiWorker {
     }
 }
 
-export function setUpWorker(worker, prefix, docroot, vHosts = []) {
+export function setUpWorker(worker, prefix, docroot) {
     const php = new DrupalCgiWorker({
         prefix,
         docroot,
-        vHosts,
         env: {
             HTTP_USER_AGENT: worker.navigator.userAgent
         },
+        ini: `
+        date.timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}
+        `
     })
 
     const channel = getBroadcastChannel()

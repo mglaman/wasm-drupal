@@ -16,15 +16,15 @@ $install_params = \json_decode(
 
 chdir($docroot . '/web');
 
-if (!is_dir('sites/default/files/css') && !mkdir('sites/default/files/css') && !is_dir('sites/default/files/css')) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/css'));
-}
-if (!is_dir('sites/default/files/js') && !mkdir('sites/default/files/js') && !is_dir('sites/default/files/js')) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/js'));
-}
-
 $skip_install = $install_params['skip'] ?? false;
 if ($skip_install) {
+    if (!is_dir('sites/default/files/css') && !mkdir('sites/default/files/css') && !is_dir('sites/default/files/css')) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/css'));
+    }
+    if (!is_dir('sites/default/files/js') && !mkdir('sites/default/files/js') && !is_dir('sites/default/files/js')) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/js'));
+    }
+
     print json_encode([
         'message' => "Installed",
         'type' => 'install',

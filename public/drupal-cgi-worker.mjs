@@ -61,10 +61,42 @@ export function setUpWorker(worker, prefix, docroot, vHosts = []) {
             HTTP_USER_AGENT: worker.navigator.userAgent
         },
     })
+
+    const channel = getBroadcastChannel()
+    channel.addEventListener('message', async ({ data }) => {
+        const { action, params } = data;
+        if (action === 'refresh') {
+            console.log('Refreshing CGI')
+            php.refresh();
+        }
+        if (action === 'set_vhost') {
+            const vHost = {
+                pathPrefix: `/cgi/${params.flavor}`,
+                directory: `/persist/${params.flavor}/web`,
+                entrypoint: 'index.php',
+            };
+            const settings = await php.getSettings();
+            const vHostExists = settings.vHosts.find(existing => existing.pathPrefix === vHost.pathPrefix);
+
+            if (!vHostExists) {
+                console.log('Setting virtual host')
+                console.log(vHost)
+                settings.vHosts.push(vHost)
+                await php.setSettings(settings)
+            }
+        }
+    })
+
     worker.addEventListener('install',  event => php.handleInstallEvent(event));
     worker.addEventListener('activate', event => php.handleActivateEvent(event));
+    worker.addEventListener('activate', () => {
+        channel.postMessage({
+            action: 'service_worker_activated'
+        })
+    });
     worker.addEventListener('fetch',    event => php.handleFetchEvent(event));
     worker.addEventListener('message',  event => php.handleMessageEvent(event));
+
     return php
 }
 

@@ -1,4 +1,5 @@
 import { PhpWorker } from './PhpWorker.mjs'
+import { getBroadcastChannel } from "./drupal-cgi-worker.mjs";
 
 const sharedLibs = [
     `php${PhpWorker.phpVersion}-zip.so`,
@@ -20,12 +21,16 @@ onmessage = async ({data }) => {
     const php = new PhpWorker({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] })
     php.addEventListener('output', event => {
         event.detail.forEach(detail => {
-            const data = JSON.parse(detail.trim());
-            postMessage({
-                action: `status`,
-                params,
-                ...data
-            })
+            try {
+                const data = JSON.parse(detail.trim());
+                postMessage({
+                    action: `status`,
+                    params,
+                    ...data
+                })
+            } catch (e) {
+                console.log(detail)
+            }
         })
     });
     php.addEventListener('error', event => console.log(event.detail));
@@ -40,6 +45,11 @@ onmessage = async ({data }) => {
             })
 
             const { flavor, artifact } = params;
+
+            getBroadcastChannel().postMessage({
+                action: 'set_vhost',
+                params
+            })
 
             const checkWww = await php.analyzePath(`/persist/${flavor}`)
             if (checkWww.exists) {

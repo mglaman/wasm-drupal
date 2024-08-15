@@ -18,7 +18,13 @@ onmessage = async ({data }) => {
     const { action, params } = data;
 
     console.log('booting PhpWorker')
-    const php = new PhpWorker({ sharedLibs, persist: [{ mountPath: '/persist' }, { mountPath: '/config' }] })
+    const php = new PhpWorker({
+        sharedLibs,
+        persist: [{ mountPath: '/persist' }, { mountPath: '/config' }],
+        ini: `
+        date.timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}
+        `
+    })
     php.addEventListener('output', event => {
         event.detail.forEach(detail => {
             try {

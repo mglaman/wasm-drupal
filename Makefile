@@ -21,4 +21,4 @@ demo-test:
 	npm run test
 
 clean:
-	git clean -fdx
+	cd public && git clean -fdx

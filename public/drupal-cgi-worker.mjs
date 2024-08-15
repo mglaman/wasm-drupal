@@ -1,4 +1,3 @@
-import { onMessage, sendMessageFor } from "./msg-bus.mjs";
 import { PhpCgiWorker } from "./PhpCgiWorker.mjs";
 
 const onRequest = (request, response) => {
@@ -101,22 +100,19 @@ export function setUpWorker(worker, prefix, docroot) {
     return php
 }
 
-export function registerWorker(serviceWorkerUrl) {
+export function registerWorker(moduleUrl, bundledUrl) {
     const serviceWorker = navigator.serviceWorker;
-    serviceWorker.register(`/service-worker.mjs`, {
+    serviceWorker.register(moduleUrl, {
         type: "module"
     })
         .catch(() => {
             console.log('Browser did not support ES modules in service worker, trying bundled service worker')
-            serviceWorker.register(`/service-worker.js`)
+            serviceWorker.register(bundledUrl)
                 .catch(error => {
                     alert("There was an error loading the service worker. Check known compatibility issues and your browser's developer console.")
                     console.error(error)
                 });
         });
-    serviceWorker.addEventListener('message', onMessage);
-
-    return sendMessageFor(serviceWorkerUrl)
 }
 
 export function getBroadcastChannel() {

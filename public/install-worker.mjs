@@ -81,7 +81,7 @@ onmessage = async ({data }) => {
                     message: 'Downloading artifact'
                 })
                 console.log('Downloading artifact')
-                const downloader = fetch(`/assets/${artifact}`);
+                const downloader = fetch(artifact);
                 const download = await downloader;
                 const zipContents = await download.arrayBuffer();
 

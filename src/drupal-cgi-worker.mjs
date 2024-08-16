@@ -1,4 +1,4 @@
-import { PhpCgiWorker } from "./PhpCgiWorker.mjs";
+import { PhpCgiWorker } from "php-cgi-wasm/PhpCgiWorker.mjs";
 
 const onRequest = (request, response) => {
     const url = new URL(request.url);

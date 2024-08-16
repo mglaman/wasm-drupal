@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import TrialManager, { defineTrialManagerElement } from "../public/trial-manager.mjs";
+import TrialManager, { defineTrialManagerElement } from "../src/trial-manager.mjs";
 
 function createMockWorker() {
     const mock = {

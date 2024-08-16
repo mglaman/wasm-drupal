@@ -3,18 +3,8 @@
 /public/*.wasm
 /public/php-*
 /public/Php*
-/public/breakoutRequest.mjs
-/public/config.mjs
-/public/fsOps.mjs
-/public/msg-bus.mjs
-/public/parseResponse.mjs
-/public/resolveDependencies.mjs
-/public/webTransactions.mjs
-/public/OutputBuffer.mjs
-/public/_Event.mjs
-/public/service-worker.js
-/public/install-worker.js
-/public/worker.js.map
+/public/*.js
+/public/lib/*
 /node_modules
 public/styles.css
 

@@ -4,6 +4,7 @@
 /public/php-*
 /public/Php*
 /public/*.js
+/public/*.mjs
 /public/lib/*
 /node_modules
 public/styles.css

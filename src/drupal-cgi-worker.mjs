@@ -105,7 +105,8 @@ export function registerWorker(moduleUrl, bundledUrl) {
     serviceWorker.register(moduleUrl, {
         type: "module"
     })
-        .catch(() => {
+        .catch((error) => {
+            console.log(error)
             console.log('Browser did not support ES modules in service worker, trying bundled service worker')
             serviceWorker.register(bundledUrl)
                 .catch(error => {

@@ -4,7 +4,7 @@ export default class TrialManager extends HTMLElement {
     static observedAttributes = ['mode', 'message'];
     constructor() {
         super()
-        this.worker = new Worker('/install-worker.mjs', {
+        this.worker = new Worker('/install-worker.js', {
             type: "module"
         });
         this.worker.onmessage = this.onMessage.bind(this)

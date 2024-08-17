@@ -14,7 +14,7 @@ const sharedLibs = [
     `php${PhpWorker.phpVersion}-simplexml.so`,
 ];
 
-onmessage = async ({data }) => {
+self.onmessage = async ({data }) => {
     const { action, params } = data;
 
     console.log('booting PhpWorker')
@@ -81,7 +81,7 @@ onmessage = async ({data }) => {
                     message: 'Downloading artifact'
                 })
                 console.log('Downloading artifact')
-                const downloader = fetch(`/assets/${artifact}`);
+                const downloader = fetch(artifact);
                 const download = await downloader;
                 const zipContents = await download.arrayBuffer();
 

@@ -14,7 +14,7 @@ const sharedLibs = [
     `php${PhpWorker.phpVersion}-simplexml.so`,
 ];
 
-onmessage = async ({data }) => {
+self.onmessage = async ({data }) => {
     const { action, params } = data;
 
     console.log('booting PhpWorker')

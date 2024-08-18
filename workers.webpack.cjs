@@ -12,7 +12,7 @@ module.exports = {
     ]
   },
   entry: {
-    "service-worker": "./public/service-worker.mjs",
+    "service-worker": "./src/service-worker.mjs",
   },
   output: {
     path: path.resolve(__dirname, "public"),

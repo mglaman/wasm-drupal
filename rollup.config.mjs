@@ -3,13 +3,13 @@ import resolve from '@rollup/plugin-node-resolve';
 import copy from 'rollup-plugin-copy';
 
 export default defineConfig([
-    // @todo add target for service-worker.mjs as iife
     {
         input: [
             'src/main.mjs',
             'src/drupal-cgi-worker.mjs',
             'src/install-worker.mjs',
             'src/trial-manager.mjs',
+            'src/service-worker.mjs'
         ],
         treeshake: false,
         output: {
@@ -19,7 +19,7 @@ export default defineConfig([
             preserveModulesRoot: 'src',
             entryFileNames: (chunkInfo) => {
                 if (chunkInfo.name.includes('node_modules')) {
-                    return chunkInfo.name.replace('node_modules', 'lib') + '.js';
+                    return chunkInfo.namhe.replace('node_modules', 'lib') + '.js';
                 }
 
                 return '[name].js';
@@ -31,29 +31,30 @@ export default defineConfig([
             copy({
                 targets: [
                     {
-                        src: 'src/service-worker.mjs',
-                        dest: 'public'
+                        src: [
+                            'node_modules/**/*.so',
+                            '!node_modules/**/php8.0*',
+                            '!node_modules/**/php8.1*',
+                            '!node_modules/**/php8.2*',
+                        ],
+                        dest: [
+                            'public/lib/php-cgi-wasm',
+                            'public/lib/php-wasm',
+                        ],
                     },
                     {
                         src: [
-                            'node_modules/php-*/**/*.mjs*',
-                            '!node_modules/php-*/**/*node*',
-                            '!node_modules/php-*/**/*Node*',
-                            '!node_modules/php-*/**/*webview*',
-                            '!node_modules/php-*/**/*Webview*',
-                            '!node_modules/php-*/**/php-tags*',
-                            '!node_modules/php-*/**/index*',
+                            'node_modules/php-wasm/php-worker.mjs',
+                            'node_modules/php-wasm/php-worker.mjs.wasm',
+                            'node_modules/php-wasm/libxml2.so',
+                            'node_modules/php-cgi-wasm/php-cgi-worker.mjs',
+                            'node_modules/php-cgi-wasm/php-cgi-worker.mjs.wasm',
+                            'node_modules/php-cgi-wasm/libxml2.so',
                         ],
-                        dest: 'public'
-                    },
-                    {
-                        src: [
-                            'node_modules/*/*.so',
-                            '!node_modules/*/php8.0*',
-                            '!node_modules/*/php8.1*',
-                            '!node_modules/*/php8.2*',
-                        ],
-                        dest: 'public'
+                        dest: 'public',
+                        rename: (name, extension, fullPath) => {
+                            return fullPath.replace('node_modules', 'lib')
+                        }
                     }
                 ]
             })

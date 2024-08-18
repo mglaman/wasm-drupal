@@ -1,4 +1,6 @@
 {
+  "private": true,
+  "type": "module",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@tailwindcss/typography": "^0.5.13",
@@ -28,7 +30,7 @@
   "scripts": {
     "tailwind:build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
-    "worker:build": "webpack --config workers.webpack.js",
+    "worker:build": "webpack --config workers.webpack.cjs",
     "build": "rollup --config && npm run worker:build && npm run tailwind:build",
     "test": "vitest",
     "coverage": "vitest run --coverage"

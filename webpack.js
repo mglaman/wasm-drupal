@@ -3,42 +3,29 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = [
   {
-    entry: {
-      main: './src/main.mjs',
-      'install-worker': './src/install-worker.mjs',
-      'trial-manager': './src/trial-manager.mjs',
-      'drupal-cgi-worker': './src/drupal-cgi-worker.mjs',
-      'service-worker': './src/service-worker.mjs',
-    },
-    output: {
-      path: path.resolve(__dirname, 'dist'),
-      filename: '[name].mjs', // Output files with the same name as the entry points
-      library: {
-        type: 'module'
-      }
-    },
-    experiments: {
-      outputModule: true, // Necessary for libraryTarget: 'module'
-    },
+    mode: "production",
     module: {
       rules: [
         {
-          test: /\.m?js$/, // Handle both .js and .mjs files
+          test: /\.mjs$/,
           exclude: /node_modules/,
           use: { loader: "babel-loader" }
         },
-      ],
+      ]
     },
-    resolve: {
-      extensions: ['.js', '.mjs'], // Ensure .mjs is resolved
-      mainFields: ['module', 'main'],
+    entry: {
+      main: './src/main.mjs',
+    },
+    output: {
+      path: path.resolve(__dirname, "public"),
+      filename: "[name].js"
     },
     plugins: [
       new CopyWebpackPlugin({
         patterns: [
           {
-            from: path.resolve(__dirname, 'node_modules/*/*.so'),
-            to: path.resolve(__dirname, 'dist/[name][ext]'),
+            from: path.resolve(__dirname, 'node_modules/**/*.so'),
+            to: path.resolve(__dirname, 'public/[name][ext]'),
             globOptions: {
               ignore: [
                 '**/php8.2*',
@@ -51,13 +38,7 @@ module.exports = [
         ],
       }),
     ],
-    optimization: {
-      splitChunks: {
-        chunks: 'all',
-        name: false, // Ensure files are not renamed during the split
-      },
-      minimize: false, // Disable minimization for clearer paths
-    },
+    target: "web"
   },
   {
     mode: "production",
@@ -71,6 +52,7 @@ module.exports = [
       ]
     },
     entry: {
+      'install-worker': './src/install-worker.mjs',
       "service-worker": "./src/service-worker.mjs",
     },
     output: {

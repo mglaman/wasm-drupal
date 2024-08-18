@@ -1,4 +1,5 @@
 import { PhpCgiWorker } from "php-cgi-wasm/PhpCgiWorker.mjs";
+import { getBroadcastChannel } from "./channel.mjs";
 
 const onRequest = (request, response) => {
     const url = new URL(request.url);
@@ -113,8 +114,4 @@ export function registerWorker(moduleUrl, bundledUrl) {
                     console.error(error)
                 });
         });
-}
-
-export function getBroadcastChannel() {
-    return new BroadcastChannel('drupal-cgi-worker');
 }

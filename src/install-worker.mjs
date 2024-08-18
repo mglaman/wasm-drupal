@@ -1,5 +1,5 @@
 import { PhpWorker } from 'php-wasm/PhpWorker.mjs'
-import { getBroadcastChannel } from "./drupal-cgi-worker.mjs";
+import { getBroadcastChannel } from "./channel.mjs";
 
 const sharedLibs = [
     `php${PhpWorker.phpVersion}-zip.so`,

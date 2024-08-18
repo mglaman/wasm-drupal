@@ -26,9 +26,8 @@
   "scripts": {
     "tailwind:build": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/styles.css -o ./public/styles.css --watch",
-    "postinstall": "./postinstall.sh",
     "worker:build": "webpack --config workers.webpack.js",
-    "build": "webpack --config webpack.js",
+    "build": "webpack --config webpack.js && npm run tailwind:build",
     "test": "vitest",
     "coverage": "vitest run --coverage"
   }

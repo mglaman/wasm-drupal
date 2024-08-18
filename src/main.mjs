@@ -1,8 +1,13 @@
-import { registerWorker } from './drupal-cgi-worker.mjs'
 import { defineTrialManagerElement } from "./trial-manager.mjs";
 
-defineTrialManagerElement()
-registerWorker(
-  `${window.location.origin}/service-worker.mjs`,
-  `${window.location.origin}/service-worker.js`
-)
+defineTrialManagerElement();
+
+const serviceWorker = navigator.serviceWorker;
+serviceWorker
+  .register(`${window.location.origin}/service-worker.js`)
+  .catch((error) => {
+    alert(
+      "There was an error loading the service worker. Check known compatibility issues and your browser's developer console."
+    );
+    console.error(error);
+  });

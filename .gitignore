@@ -17,6 +17,7 @@
 /public/worker.js.map
 /node_modules
 public/styles.css
+public/main.js
 
 /drupal-core
 /drupal-cms

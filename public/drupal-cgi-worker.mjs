@@ -1,6 +1,23 @@
 import { PhpCgiWorker } from "./PhpCgiWorker.mjs";
 import {getBroadcastChannel} from "./utils.mjs";
 
+class CookieMap extends Map {
+    constructor(iterable) {
+        super(iterable);
+    }
+
+    set(key, value) {
+        console.table({ key, value })
+        if (value === 'deleted') {
+            super.delete(key)
+        } else {
+            super.set(key, value)
+        }
+    }
+}
+
+const cookies = new CookieMap;
+
 const onRequest = (request, response) => {
     const url = new URL(request.url);
     const logLine =
@@ -47,8 +64,19 @@ export class DrupalCgiWorker extends PhpCgiWorker {
                 svg: "image/svg+xml",
                 ...types
             },
+            cookies,
             ...args,
         });
+    }
+
+    async _beforeRequest() {
+        await super._beforeRequest();
+        // sync cookie data from session or local storage to `this.cookies`
+    }
+
+    async _afterRequest() {
+        await super._afterRequest();
+        // sync cookie data from `this.cookies` to session or local storage
     }
 }
 

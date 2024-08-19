@@ -1,4 +1,4 @@
-import { registerWorker } from './drupal-cgi-worker.mjs'
+import { registerWorker } from './utils.mjs'
 import { defineTrialManagerElement } from "./trial-manager.mjs";
 
 defineTrialManagerElement()

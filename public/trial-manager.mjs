@@ -1,4 +1,4 @@
-import {getBroadcastChannel} from "./drupal-cgi-worker.mjs";
+import {getBroadcastChannel} from "./utils.mjs";
 
 export default class TrialManager extends HTMLElement {
     static observedAttributes = ['mode', 'message'];

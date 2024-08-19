@@ -1,5 +1,8 @@
 import { PhpCgiWorker } from "./PhpCgiWorker.mjs";
 import {getBroadcastChannel} from "./utils.mjs";
+import CookieMap from "./cookie-map.mjs";
+
+const cookies = new CookieMap;
 
 const onRequest = (request, response) => {
     const url = new URL(request.url);
@@ -47,6 +50,7 @@ export class DrupalCgiWorker extends PhpCgiWorker {
                 svg: "image/svg+xml",
                 ...types
             },
+            cookies,
             ...args,
         });
     }

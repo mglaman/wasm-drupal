@@ -25,5 +25,8 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "rollup": "^4.21.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.21.0"
   }
 }

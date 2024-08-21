@@ -50,23 +50,6 @@ describe('TrialManager', () => {
         expect(sut.getInnerHTML()).toContain('Export')
     })
 
-    it('handles broadcast message for sw activation', () => {
-        const worker = createMockWorker()
-        worker.postMessage.mockImplementation(({ action, params }) => {
-            expect(action).toBe('check_existing')
-            expect(params).toStrictEqual({ flavor: 'foo' })
-        })
-
-        createTrialManager('foo');
-
-        const channel = new BroadcastChannel('drupal-cgi-worker');
-        channel.postMessage({action: 'service_worker_activated'})
-
-        vi.waitFor(() => {
-            expect(worker.postMessage).toHaveBeenCalledTimes(1)
-        })
-    })
-
     it.each([
         ['resume', 'start', { flavor: 'bar', artifact: 'baz.zip' }, 'started', 'new_session'],
         ['export', 'export', { flavor: 'bar' }, 'started', 'new_session'],
@@ -99,15 +82,24 @@ describe('TrialManager', () => {
         const sut = createTrialManager('bar', 'baz.zip')
         sut.mode = 'existing_session';
         document.body.appendChild(sut);
+
+        const channel = new BroadcastChannel('drupal-cgi-worker');
+        channel.postMessage({action: 'service_worker_ready'})
+        vi.waitFor(() => {
+            expect(worker.postMessage).toHaveBeenCalledTimes(1)
+        })
+
         document.getElementById(buttonId).click()
-        expect(worker.postMessage).toHaveBeenCalledTimes(2)
+        vi.waitFor(() => {
+            expect(worker.postMessage).toHaveBeenCalledTimes(2)
+        })
         expect(sut.mode).toStrictEqual(endMode)
     })
 
     it.each([
         ['drupal'],
         ['starshot']
-    ])('checks for existing `%s` docroot when connected', (flavor) => {
+    ])('checks for existing `%s` docroot when service_worker_ready', (flavor) => {
         const worker = createMockWorker()
         worker.postMessage.mockImplementation(({ action, params }) => {
             expect(action).toBe('check_existing')
@@ -116,7 +108,12 @@ describe('TrialManager', () => {
 
         document.body.appendChild(createTrialManager(flavor));
 
-        expect(worker.postMessage).toHaveBeenCalledTimes(1)
+        const channel = new BroadcastChannel('drupal-cgi-worker');
+        channel.postMessage({action: 'service_worker_ready'})
+
+        vi.waitFor(() => {
+            expect(worker.postMessage).toHaveBeenCalledTimes(1)
+        })
     })
 
     it('starts new session if one does not exist', () => {
@@ -154,8 +151,14 @@ describe('TrialManager', () => {
         })
 
         document.body.appendChild(createTrialManager('foo'));
-        expect(worker.postMessage).toHaveBeenCalledTimes(2)
-        expect(window.location).toStrictEqual('/cgi/foo')
+
+        const channel = new BroadcastChannel('drupal-cgi-worker');
+        channel.postMessage({action: 'service_worker_ready'})
+
+        vi.waitFor(() => {
+            expect(worker.postMessage).toHaveBeenCalledTimes(2)
+            expect(window.location).toStrictEqual('/cgi/foo')
+        })
     })
 
     it('terminates worker on removal', () => {

@@ -12,7 +12,7 @@ export default class TrialManager extends HTMLElement {
         this.channel = getBroadcastChannel()
         this.channel.addEventListener('message', ({ data }) => {
             const { action } = data;
-            if (action === 'service_worker_activated') {
+            if (action === 'service_worker_ready') {
                 this.sendWorkerAction('check_existing', {
                     flavor: this.flavor
                 })
@@ -77,9 +77,6 @@ export default class TrialManager extends HTMLElement {
     connectedCallback() {
         this.classList.add('flex', 'flex-col', 'items-center', 'justify-center', 'w-full', 'h-dvh')
         this.render()
-        this.sendWorkerAction('check_existing', {
-            flavor: this.flavor
-        })
     }
 
     disconnectedCallback() {

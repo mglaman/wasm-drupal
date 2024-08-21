@@ -1,4 +1,4 @@
-import {getBroadcastChannel} from "./utils.mjs";
+import getBroadcastChannel from "./lib/channel.mjs";
 
 export default class TrialManager extends HTMLElement {
     static observedAttributes = ['mode', 'message'];

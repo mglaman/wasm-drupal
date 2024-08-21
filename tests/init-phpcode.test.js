@@ -4,22 +4,40 @@ import { PhpBase } from 'php-wasm/PhpBase.mjs';
 import PhpBinary from 'php-wasm/php-node.mjs';
 import fs from "node:fs";
 
+function createPhp() {
+    return new PhpBase(PhpBinary, {
+        persist: [
+            {mountPath: '/persist', localPath: process.cwd() + '/fixtures/persist'},
+            {mountPath: '/config', localPath: process.cwd() + '/fixtures/config'},
+        ],
+        sharedLibs: [
+            {
+                name: `php${PhpNode.phpVersion}-zip.so`,
+                url: `${process.cwd()}/node_modules/php-wasm-libzip/php${PhpNode.phpVersion}-zip.so`,
+                ini: true
+            },
+            {
+                name: `libzip.so`,
+                url: `${process.cwd()}/node_modules/php-wasm-libzip/libzip.so`,
+                ini: false
+            },
+            {
+                name: `php${PhpNode.phpVersion}-zlib.so`,
+                url: `${process.cwd()}/node_modules/php-wasm-zlib/php${PhpNode.phpVersion}-zlib.so`,
+                ini: true
+            },
+            {
+                name: `libz.so`,
+                url: `${process.cwd()}/node_modules/php-wasm-zlib/libz.so`,
+                ini: false
+            },
+        ]
+    });
+}
+
 describe('init.phpcode', () => {
     it('errors if artifact not found', async () => {
-        const php = new PhpBase(PhpBinary, {
-            persist: {
-                mountPath: '/persist',
-                localPath: process.cwd() + '/tests/fixtures/'
-            },
-            sharedLibs: [
-                // await import('php-wasm-zlib'),
-                // await import('php-wasm-libzip'),
-                `${process.cwd()}/node_modules/php-wasm-libzip/php${PhpNode.phpVersion}-zip.so`,
-                `${process.cwd()}/node_modules/php-wasm-libzip/libzip.so`,
-                `${process.cwd()}/node_modules/php-wasm-zlib/php${PhpNode.phpVersion}-zlib.so`,
-                `${process.cwd()}/node_modules/php-wasm-zlib/zlib.so`,
-            ]
-        });
+        const php = createPhp()
         let stdOut = '', stdErr = '';
 
         php.addEventListener('output', (event) => event.detail.forEach(line => void (stdOut += line)));
@@ -30,7 +48,7 @@ describe('init.phpcode', () => {
 
         const initPhpExitCode = await php.run(initPhpCode);
         console.log(initPhpExitCode);
-        expect(stdOut).toStrictEqual('foo')
-        expect(stdErr).toStrictEqual('foo')
+        expect(stdOut.trim()).toStrictEqual('{"message":"artifact could not be found","type":"error"}')
+        expect(stdErr.trim()).toStrictEqual('')
     })
 })

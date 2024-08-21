@@ -1,5 +1,5 @@
-import { PhpWorker } from './PhpWorker.mjs'
-import { getBroadcastChannel } from "./utils.mjs";
+import { PhpWorker } from './lib/PhpWorker.mjs'
+import getBroadcastChannel from "./lib/channel.mjs";
 
 const sharedLibs = [
     `php${PhpWorker.phpVersion}-zip.so`,

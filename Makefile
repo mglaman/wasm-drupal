@@ -13,7 +13,10 @@ download-artifacts:
 	curl -o public/assets/drupal-starhot.zip	https://wasm-drupal.mglaman.dev/assets/drupal-starshot.zip
 	curl -o public/assets/drupal-cms.zip 		https://git.drupalcode.org/api/v4/projects/157093/jobs/artifacts/0.x/raw/trial.zip?job=trial
 
-demo-build:
+packages-build:
+	cd packages/php-wasm-cgi-worker && npm install && npm run build
+
+demo-build: packages-build
 	npm install
 	npm run build
 

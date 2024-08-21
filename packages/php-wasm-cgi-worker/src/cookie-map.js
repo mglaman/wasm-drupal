@@ -1,4 +1,4 @@
-export default class CookieMap extends Map {
+export default class extends Map {
 
     name = '/cookies'
     store = 'COOKIES'

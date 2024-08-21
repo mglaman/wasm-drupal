@@ -9,7 +9,7 @@ global.navigator = {
     }
 };
 
-vi.mock('../public/PhpWorker.mjs', () => {
+vi.mock('../public/lib/PhpWorker.mjs', () => {
     return {
         PhpWorker: vi.fn(() => {
             return {

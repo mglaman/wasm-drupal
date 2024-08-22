@@ -17,6 +17,11 @@ jobs:
           node-version: "22"
       - name: "build"
         run: make demo-build
+      - name: Download Drupal Core artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: drupal-core
+          path: tests/fixtures/persist
       - name: "test"
         run: make demo-test
       - name: Upload demo archive

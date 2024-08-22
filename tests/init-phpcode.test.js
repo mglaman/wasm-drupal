@@ -7,11 +7,12 @@ import { dirname } from 'node:path'
 
 const rootPath = dirname(import.meta.dirname);
 const configFixturePath = rootPath + '/tests/fixtures/config'
+const persistFixturePath = rootPath + '/tests/fixtures/persist'
 
 function createPhp() {
-    return new PhpBase(PhpBinary, {
+    const php = new PhpBase(PhpBinary, {
         persist: [
-            {mountPath: '/persist', localPath: rootPath + '/tests/fixtures/persist'},
+            {mountPath: '/persist', localPath: persistFixturePath},
             {mountPath: '/config', localPath: configFixturePath},
         ],
         sharedLibs: [
@@ -37,28 +38,67 @@ function createPhp() {
             },
         ]
     });
+    const stdOut = [], stdErr = [];
+    php.addEventListener('output', (event) => event.detail.forEach(line => void (stdOut.push(line))));
+    php.addEventListener('error',  (event) => event.detail.forEach(line => void (stdErr.push(line))));
+    return [stdOut, stdErr, php]
+}
+
+async function runInitPhpCode(php) {
+    const initPhpCode = fs.readFileSync(rootPath + '/public/assets/init.phpcode').toString()
+    await php.binary;
+    await php.run(initPhpCode);
+}
+
+function assertOutput(std, expected) {
+    expect(std.join('').trim()).toStrictEqual(expected)
 }
 
 describe('init.phpcode', () => {
     afterEach(() => {
         if (fs.existsSync(`${configFixturePath}/flavor.txt`)) {
+            const flavorValue = fs.readFileSync(`${configFixturePath}/flavor.txt`).toString()
+            if (fs.existsSync(`${persistFixturePath}/${flavorValue}`)) {
+                fs.rmSync(`${persistFixturePath}/${flavorValue}`, { recursive: true, force: true })
+            }
             fs.unlinkSync(`${configFixturePath}/flavor.txt`)
+        }
+        if (fs.existsSync(`${persistFixturePath}/artifact.zip`)) {
+            fs.unlinkSync(`${persistFixturePath}/artifact.zip`)
         }
     })
     it('errors if artifact not found', async () => {
         fs.writeFileSync(`${configFixturePath}/flavor.txt`, 'drupal')
 
-        const php = createPhp()
-        let stdOut = '', stdErr = '';
+        const [stdOut, stdErr, php] = createPhp()
+        await runInitPhpCode(php)
 
-        php.addEventListener('output', (event) => event.detail.forEach(line => void (stdOut += line)));
-        php.addEventListener('error',  (event) => event.detail.forEach(line => void (stdErr += line)));
+        assertOutput(stdOut, '{"message":"artifact could not be found","type":"error"}')
+        assertOutput(stdErr, '')
+    })
+    it('errors if artifact cannot be opened properly', async () => {
+        fs.writeFileSync(`${configFixturePath}/flavor.txt`, 'drupal')
+        fs.writeFileSync(`${persistFixturePath}/artifact.zip`, 'definitely not a zip file')
 
-        const initPhpCode = fs.readFileSync(rootPath + '/public/assets/init.phpcode').toString()
-        await php.binary;
-        await php.run(initPhpCode);
+        const [stdOut, stdErr, php] = createPhp()
+        await runInitPhpCode(php)
 
-        expect(stdOut.trim()).toStrictEqual('{"message":"artifact could not be found","type":"error"}')
-        expect(stdErr.trim()).toStrictEqual('')
+        assertOutput(stdOut, '{"message":"could not open artifact archive","type":"error"}')
+        assertOutput(stdErr, '')
+    })
+    it('extracts an archive correctly', async () => {
+        fs.writeFileSync(`${configFixturePath}/flavor.txt`, 'drupal')
+        fs.copyFileSync(
+            `${persistFixturePath}/drupal-core.zip`,
+            `${persistFixturePath}/artifact.zip`
+        )
+
+        const [stdOut, stdErr, php] = createPhp()
+        await runInitPhpCode(php)
+
+        expect(stdOut.pop().trim()).toStrictEqual('{"message":"Unpacking files 100%","type":"unarchive"}')
+        assertOutput(stdErr, '')
+
+        expect(fs.existsSync(`${persistFixturePath}/drupal`)).toBe(true)
     })
 })

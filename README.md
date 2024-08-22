@@ -49,7 +49,7 @@ Log in with
 
 The goal is to split out the JavaScript from this project into a reusable package for others.
 
-* `drupal-cgi-worker.mjs` as an easy way to register the service worker for serving a Drupal application
+* `setup-cgi-worker.mjs` as an easy way to register the service worker for serving a Drupal application
 * `install-worker.mjs` as an easy way to install a Drupal application from an artifact
 
 ## Debugging steps

@@ -1,5 +1,7 @@
 import {describe, it, expect, afterEach} from 'vitest'
 import { PhpNode } from 'php-wasm/PhpNode.mjs';
+import { PhpBase } from 'php-wasm/PhpBase.mjs';
+import PhpBinary from 'php-wasm/php-node.mjs';
 import fs from "node:fs";
 import { dirname } from 'node:path'
 import {PhpCgiNode} from "php-cgi-wasm/PhpCgiNode.mjs";
@@ -104,7 +106,7 @@ const sharedLibs = [
 const locateFile = () => undefined;
 
 function createPhp() {
-    const php = new PhpNode({
+    const php = new PhpBase(PhpBinary, {
         persist: persistPaths,
         locateFile,
         sharedLibs

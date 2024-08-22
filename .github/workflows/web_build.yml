@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
-      - uses: ./.github/actions/create-drupal-core-artifact.yml
+      - uses: ./.github/actions/create-drupal-core-artifact
       - run: cp drupal-core/drupal-core.zip tests/fixtures/persist
 
       - name: "Install Node"

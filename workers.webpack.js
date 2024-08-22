@@ -13,7 +13,6 @@ module.exports = {
   },
   entry: {
     "service-worker": "./public/service-worker.mjs",
-    "install-worker": "./public/install-worker.mjs"
   },
   output: {
     path: path.resolve(__dirname, "public"),

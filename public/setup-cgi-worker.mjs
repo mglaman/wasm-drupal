@@ -32,7 +32,7 @@ const sharedLibs = [
     `php\${PHP_VERSION}-simplexml.so`,
 ];
 
-export default function setupCgiWorker(worker, PhpCgiWorker, prefix, docroot, types = {}, vHosts = {}, env = {}) {
+export default function setupCgiWorker(worker, PhpCgiWorker, prefix, docroot, types = {}, vHosts = [], env = {}) {
     const php = new PhpCgiWorker({
         onRequest,
         notFound,

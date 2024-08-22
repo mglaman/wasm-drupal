@@ -11,19 +11,18 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
+      - uses: ./.github/actions/create-drupal-core-artifact.yml
+      - run: cp drupal-core/drupal-core.zip tests/fixtures/persist
+
       - name: "Install Node"
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: "build"
-        run: make demo-build
-      - name: Download Drupal Core artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: drupal-core
-          path: tests/fixtures/persist
-      - name: "test"
-        run: make demo-test
+
+      - run: npm ci
+      - run: npm run test
+      - run: npm run build
+
       - name: Upload demo archive
         uses: actions/upload-artifact@v4
         with:

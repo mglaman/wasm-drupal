@@ -119,7 +119,7 @@ function assertOutput(std, expected) {
     expect(std.join('').trim()).toStrictEqual(expected)
 }
 
-describe('install-site.phpcode', () => {
+describe('phpcode', () => {
     afterEach(() => {
         if (fs.existsSync(`${configFixturePath}/flavor.txt`)) {
             const flavorValue = fs.readFileSync(`${configFixturePath}/flavor.txt`).toString()
@@ -132,6 +132,41 @@ describe('install-site.phpcode', () => {
         if (fs.existsSync(`${persistFixturePath}/artifact.zip`)) {
             fs.unlinkSync(`${persistFixturePath}/artifact.zip`)
         }
+    })
+
+    it('errors if artifact not found', async () => {
+        fs.writeFileSync(`${configFixturePath}/flavor.txt`, 'drupal')
+
+        const [stdOut, stdErr, php] = createPhp()
+        await runPhpCode(php, rootPath + '/public/assets/init.phpcode')
+
+        assertOutput(stdOut, '{"message":"artifact could not be found","type":"error"}')
+        assertOutput(stdErr, '')
+    })
+    it('errors if artifact cannot be opened properly', async () => {
+        fs.writeFileSync(`${configFixturePath}/flavor.txt`, 'drupal')
+        fs.writeFileSync(`${persistFixturePath}/artifact.zip`, 'definitely not a zip file')
+
+        const [stdOut, stdErr, php] = createPhp()
+        await runPhpCode(php, rootPath + '/public/assets/init.phpcode')
+
+        assertOutput(stdOut, '{"message":"could not open artifact archive","type":"error"}')
+        assertOutput(stdErr, '')
+    })
+    it('extracts an archive correctly', async () => {
+        fs.writeFileSync(`${configFixturePath}/flavor.txt`, 'drupal')
+        fs.copyFileSync(
+            `${persistFixturePath}/drupal-core.zip`,
+            `${persistFixturePath}/artifact.zip`
+        )
+
+        const [stdOut, stdErr, php] = createPhp()
+        await runPhpCode(php, rootPath + '/public/assets/init.phpcode')
+
+        expect(stdOut.pop().trim()).toStrictEqual('{"message":"Unpacking files 100%","type":"unarchive"}')
+        assertOutput(stdErr, '')
+
+        expect(fs.existsSync(`${persistFixturePath}/drupal`)).toBe(true)
     })
 
     it('installs the site', async () => {
@@ -164,4 +199,4 @@ describe('install-site.phpcode', () => {
         expect(stdOut.pop().trim()).toStrictEqual('{"message":"Performing install task (12 \\/ 12)","type":"install"}')
         assertOutput(stdErr, '')
     })
-});
+})

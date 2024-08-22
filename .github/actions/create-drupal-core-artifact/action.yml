@@ -23,10 +23,6 @@ runs:
         composer config --no-plugins allow-plugins.cweagans/composer-patches true
         
         composer install --no-dev
-        
-        cp web/sites/example.settings.local.php web/sites/default/settings.local.php
-        cp web/sites/default/default.settings.php web/sites/default/settings.php
-        echo "include \$app_root . '/' . \$site_path . '/settings.local.php';" >> web/sites/default/settings.php
     - name: composer archive
       shell: bash
       run: cd drupal-core && composer archive --format=zip --file=drupal-core

@@ -95,6 +95,16 @@ try {
 
     \Drupal::getContainer()->get('module_installer')->uninstall(['big_pipe']);
 
+    \Drupal::configFactory()
+        ->getEditable('system.logging')
+        ->set('error_level', 'verbose')
+        ->save();
+    \Drupal::configFactory()
+        ->getEditable('system.performance')
+        ->set('css.preprocess', false)
+        ->set('js.preprocess', false)
+        ->save();
+
 } catch (\Exception $e) {
     print json_encode([
         'message' => $e->getMessage(),

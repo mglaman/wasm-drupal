@@ -67,6 +67,7 @@ describe('init.phpcode', () => {
             fs.unlinkSync(`${persistFixturePath}/artifact.zip`)
         }
     })
+
     it('errors if artifact not found', async () => {
         fs.writeFileSync(`${configFixturePath}/flavor.txt`, 'drupal')
 

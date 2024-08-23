@@ -1,0 +1,76 @@
+<?php
+
+use Drupal\Core\DrupalKernel;
+use Drupal\Core\Site\Settings;
+use Drupal\user\Entity\User;
+use Symfony\Component\HttpFoundation\Request;
+
+$stdErr = fopen('php://stderr', 'w');
+
+set_error_handler(function (...$args) use ($stdErr, &$errors) {
+    fwrite($stdErr, print_r($args, 1));
+});
+
+$flavor = file_get_contents('/config/flavor.txt');
+$docroot = '/persist/' . $flavor;
+
+chdir($docroot . '/web');
+
+
+$class_loader = require $docroot . '/vendor/autoload.php';
+//
+//
+
+$kernel = new DrupalKernel('prod', $class_loader);
+$request = Request::createFromGlobals();
+DrupalKernel::bootEnvironment();
+Settings::initialize($docroot, 'sites/default', $class_loader);
+$kernel->setSitePath('sites/default');
+$kernel->boot();
+$kernel->preHandle($request);
+
+// mimic \Drupal\Core\StackMiddleware\Session::handle
+/** @var \Symfony\Component\HttpFoundation\Session\Session $session */
+$session = \Drupal::service('session');
+if (!$session->start()) {
+    print json_encode([
+            'message' => 'could not start session',
+            'sent_headers' => var_export(headers_sent(), true),
+            'session_type' => var_export($session, true),
+            'type' => 'error',
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
+}
+$request->setSession($session);
+
+die(var_export(headers_sent()));
+
+$account = User::load(1);
+user_login_finalize($account);
+
+try {
+    $session->save();
+} catch (\Throwable $e) {
+    print json_encode([
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'type' => 'error',
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
+    exit(1);
+}
+
+/** @var \Drupal\Core\Session\SessionConfiguration $sessionConfig */
+$sessionConfig = \Drupal::service('session_configuration');
+$sessionOptions = $sessionConfig->getOptions(\Symfony\Component\HttpFoundation\Request::createFromGlobals());
+
+$sessions = \Drupal::database()->query('SELECT * FROM {sessions}')->fetchAll();
+
+print json_encode([
+        'params' => [
+            'started' => $session->isStarted(),
+            'name' => $session->getName(),
+            'id' => $session->getId(),
+            'optionsName' => $sessionOptions['name'],
+            'sessions' => $sessions,
+        ],
+        'type' => 'set_cookie',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;

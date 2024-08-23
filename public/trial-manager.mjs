@@ -140,6 +140,7 @@ export default class TrialManager extends HTMLElement {
                             profile: this.getAttribute('profile') || 'standard',
                             recipes: this.recipes,
                             langcode: this.getAttribute('langcode') || 'en',
+                            autoLogin: this.getAttribute('auto-login') || true,
                         }
                     }
                 })

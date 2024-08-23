@@ -220,6 +220,7 @@ describe('phpcode', () => {
             siteName: 'test',
             profile: 'standard',
             recipes: [],
+            autoLogin: true
         }))
         fs.copyFileSync(
             `${persistFixturePath}/drupal-core.zip`,
@@ -239,8 +240,14 @@ describe('phpcode', () => {
         await runPhpCode(php, rootPath + '/public/assets/install-site.phpcode')
 
         expect(stdOut.shift().trim()).toStrictEqual('{"message":"Beginning install tasks","type":"install"}')
-        expect(stdOut.pop().trim()).toStrictEqual('{"message":"Performing install task (12 \\/ 12)","type":"install"}')
+        expect(JSON.parse(stdOut.pop().trim())).toStrictEqual({"message":"Performing install task (12 / 12)","type":"install"})
         assertOutput(stdErr, '')
+        stdOut.length = 0;
+
+        await runPhpCode(php, rootPath + '/public/assets/login-admin.phpcode')
+        assertOutput(stdOut, {"message":"foo","type":"set_cookie"})
+        assertOutput(stdErr, '')
+        stdOut.length = 0;
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp();
         const response = await phpCgi.request({

@@ -141,6 +141,17 @@ self.onmessage = async ({data }) => {
                     return;
                 }
 
+                const autoLogin = params.installParameters.autoLogin || false
+                if (autoLogin) {
+                    postMessage({
+                        action: 'status',
+                        params,
+                        message: 'Logging you in'
+                    })
+                    const autoLoginCode = await (await fetch('/assets/login-admin.phpcode')).text();
+                    await php.run(autoLoginCode);
+                }
+
 
                 postMessage({
                     action: 'status',

@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Site\Settings;
 use Drupal\user\Entity\User;
@@ -50,16 +51,14 @@ try {
     exit(1);
 }
 
-/** @var \Drupal\Core\Session\SessionConfiguration $sessionConfig */
-$sessionConfig = \Drupal::service('session_configuration');
-$sessionOptions = $sessionConfig->getOptions($request);
-
-$sessions = \Drupal::database()->query('SELECT * FROM {sessions}')->fetchAll();
+$sessions = \Drupal::database()->query('SELECT [uid], [sid] FROM {sessions}')->fetchAll();
 
 print json_encode([
         'params' => [
             'name' => $session->getName(),
             'id' => $session->getId(),
+            'sid' =>  Crypt::hashBase64($session->getId()),
+            'sessions' => $sessions,
         ],
         'type' => 'set_cookie',
     ], JSON_THROW_ON_ERROR) . PHP_EOL;

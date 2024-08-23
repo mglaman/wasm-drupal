@@ -8,7 +8,8 @@ export default defineConfig({
         ],
         exclude: [
             ...configDefaults.exclude,
-            'tests/fixtures/**'
+            'tests/fixtures/**',
+            'tests/utils.js'
         ],
         coverage: {
             provider: 'v8',

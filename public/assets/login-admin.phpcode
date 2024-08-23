@@ -1,8 +1,6 @@
 <?php
 
-use Drupal\Component\Utility\Crypt;
 use Drupal\Core\DrupalKernel;
-use Drupal\Core\Site\Settings;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -15,27 +13,31 @@ set_error_handler(function (...$args) use ($stdErr, &$errors) {
 $flavor = file_get_contents('/config/flavor.txt');
 $docroot = '/persist/' . $flavor;
 
-chdir($docroot . '/web');
+$install_params = \json_decode(
+    file_get_contents("/config/$flavor-install-params.json") ?: [],
+    true
+);
 
+chdir($docroot . '/web');
 
 $class_loader = require $docroot . '/vendor/autoload.php';
 
-$kernel = new DrupalKernel('prod', $class_loader);
-$request = Request::createFromGlobals();
-$request->server->set('REMOTE_ADDR', '127.0.0.1');
-$request->server->set('SCRIPT_NAME', 'index.php');
-DrupalKernel::bootEnvironment();
-Settings::initialize($docroot, 'sites/default', $class_loader);
-$kernel->setSitePath('sites/default');
+$request = Request::create('/cgi/drupal/', 'GET', [], [], [], [
+    'HTTP_HOST' => $install_params['host'] ?? 'localhost',
+    'REMOTE_ADDR' => '127.0.0.1',
+    'SCRIPT_FILENAME' => "/persist/$flavor/web/index.php",
+    'SCRIPT_NAME' => "/cgi/$flavor/index.php"
+]);
+$kernel = DrupalKernel::createFromRequest($request, $class_loader, 'prod');
 $kernel->boot();
-$kernel->preHandle($request);
 
-// mimic \Drupal\Core\StackMiddleware\Session::handle
+$container = $kernel->getContainer();
+$container->get('request_stack')->push($request);
+
 /** @var \Symfony\Component\HttpFoundation\Session\Session $session */
-$session = \Drupal::service('session');
+$session = $container->get('session');
 $session->start();
 $request->setSession($session);
-
 
 $account = User::load(1);
 user_login_finalize($account);
@@ -51,14 +53,10 @@ try {
     exit(1);
 }
 
-$sessions = \Drupal::database()->query('SELECT [uid], [sid] FROM {sessions}')->fetchAll();
-
 print json_encode([
         'params' => [
             'name' => $session->getName(),
             'id' => $session->getId(),
-            'sid' =>  Crypt::hashBase64($session->getId()),
-            'sessions' => $sessions,
         ],
         'type' => 'set_cookie',
     ], JSON_THROW_ON_ERROR) . PHP_EOL;

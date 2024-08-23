@@ -117,6 +117,7 @@ self.onmessage = async ({data }) => {
                 console.log('Writing install parameters');
                 await php.writeFile(`/config/${flavor}-install-params.json`, JSON.stringify({
                     langcode: 'en',
+                    host: (new URL(globalThis.location || 'http://localhost')).host,
                     ...params.installParameters
                 }))
 

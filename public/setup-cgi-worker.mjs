@@ -65,7 +65,7 @@ export default function setupCgiWorker(worker, PhpCgiWorker, prefix, docroot, ty
             console.log('Refreshing CGI')
             php.refresh();
         }
-        if (action === 'set_vhost') {
+        else if (action === 'set_vhost') {
             const vHost = {
                 pathPrefix: `/cgi/${params.flavor}`,
                 directory: `/persist/${params.flavor}/web`,
@@ -79,6 +79,10 @@ export default function setupCgiWorker(worker, PhpCgiWorker, prefix, docroot, ty
                 await php.setSettings(settings)
                 await php.storeInit()
             }
+        }
+        else if (action === 'set_cookie') {
+            console.log(params)
+            cookies.set(params.name, params.id)
         }
     })
 

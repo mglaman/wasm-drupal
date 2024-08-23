@@ -94,6 +94,14 @@ export default class TrialManager extends HTMLElement {
             this.worker.postMessage({ action: 'stop' })
         }
 
+        if (type === 'set_cookie') {
+            console.log(data.params)
+            this.channel.postMessage({
+                action: 'set_cookie',
+                params: data.params
+            })
+        }
+
         if (action === 'started') {
             this.setAttribute('mode', 'new_session');
             this.setAttribute('message', 'Starting runtime')

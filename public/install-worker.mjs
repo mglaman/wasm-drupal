@@ -141,7 +141,7 @@ self.onmessage = async ({data }) => {
                     return;
                 }
 
-                const autoLogin = params.installParameters.autoLogin || false
+                const {autoLogin = false } = params.installParameters
                 if (autoLogin) {
                     postMessage({
                         action: 'status',

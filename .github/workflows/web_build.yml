@@ -12,7 +12,7 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v4
       - uses: ./.github/actions/create-drupal-core-artifact
-      - run: cp drupal-core/drupal-core.zip tests/fixtures/persist
+      - run: cp drupal-core/drupal-core.zip tests/fixtures
       - run: mv drupal-core tests/fixtures
 
       - name: "Install Node"

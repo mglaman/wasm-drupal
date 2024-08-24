@@ -1,7 +1,8 @@
 import {getBroadcastChannel} from "./utils.mjs";
-import CookieMap from "./cookie-map.mjs";
+// import CookieMap from "./cookie-map.mjs";
 
-const cookies = new CookieMap;
+// const cookies = new CookieMap;
+const cookies = new Map;
 
 const onRequest = (request, response) => {
     const url = new URL(request.url);

@@ -95,7 +95,6 @@ export default class TrialManager extends HTMLElement {
         }
 
         if (type === 'set_cookie') {
-            console.log(data.params)
             this.channel.postMessage({
                 action: 'set_cookie',
                 params: data.params

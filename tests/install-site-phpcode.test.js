@@ -44,6 +44,12 @@ describe('install-site.phpcode', () => {
         expect(stdOut.pop().trim()).toStrictEqual('{"message":"Performing install task (12 \\/ 12)","type":"install"}')
         assertOutput(stdErr, '')
 
+        const stat = fs.statSync(`${persistFixturePath}/drupal/web/sites/default`)
+        expect(stat.mode & 0o777).toStrictEqual(0o775)
+
+        const statSettings = fs.statSync(`${persistFixturePath}/drupal/web/sites/default/settings.php`)
+        expect(statSettings.mode & 0o777).toStrictEqual(0o664)
+
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
         const response = await phpCgi.request({
             connection: {
@@ -84,6 +90,12 @@ describe('install-site.phpcode', () => {
         expect(stdOut.shift().trim()).toStrictEqual('{"message":"Beginning install tasks","type":"install"}')
         expect(stdOut.pop().trim()).toStrictEqual('{"message":"Performing install task (12 \\/ 12)","type":"install"}')
         assertOutput(stdErr, '')
+
+        const stat = fs.statSync(`${persistFixturePath}/drupal/web/sites/default`)
+        expect(stat.mode & 0o777).toStrictEqual(0o775)
+
+        const statSettings = fs.statSync(`${persistFixturePath}/drupal/web/sites/default/settings.php`)
+        expect(statSettings.mode & 0o777).toStrictEqual(0o664)
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
         await phpCgi.request({

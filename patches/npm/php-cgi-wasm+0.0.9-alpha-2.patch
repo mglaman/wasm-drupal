@@ -1,0 +1,12 @@
+diff --git a/node_modules/php-cgi-wasm/PhpCgiBase.mjs b/node_modules/php-cgi-wasm/PhpCgiBase.mjs
+index 694680d..8927374 100644
+--- a/node_modules/php-cgi-wasm/PhpCgiBase.mjs
++++ b/node_modules/php-cgi-wasm/PhpCgiBase.mjs
+@@ -349,6 +349,7 @@ export class PhpCgiBase
+ 			// Rewrite to index
+ 			path = docroot + '/index.php';
+ 		}
++		originalPath += url.search
+ 
+ 		if(this.maxRequestAge > 0 && Date.now() - requestTimes.get(request) > this.maxRequestAge)
+ 		{

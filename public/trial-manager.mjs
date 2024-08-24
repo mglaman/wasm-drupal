@@ -142,12 +142,15 @@ export default class TrialManager extends HTMLElement {
                         flavor: this.flavor,
                         artifact: this.artifact,
                         installParameters: {
+                            // @todo you can't skip and be interactive, consolidate to `install-type` and `interactive`, `skip`, `automated`
                             skip: this.getAttribute('skip-install') || false,
+                            interactive: this.getAttribute('interactive-install') || false,
                             siteName: this.getAttribute('site-name') || 'Try Drupal',
                             profile: this.getAttribute('profile') || 'standard',
                             recipes: this.recipes,
                             langcode: this.getAttribute('langcode') || 'en',
-                            autoLogin: this.getAttribute('auto-login') || true,
+                            // @todo can't auto login if interactive
+                            autoLogin: this.getAttribute('auto-login') || false,
                         }
                     }
                 })

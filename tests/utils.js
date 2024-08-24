@@ -96,6 +96,16 @@ const sharedLibs = [
         url: `${rootPath}/node_modules/php-wasm-iconv/libiconv.so`,
         ini: false
     },
+    {
+        name: `php${PhpNode.phpVersion}-mbstring.so`,
+        url: `${rootPath}/node_modules/php-wasm-mbstring/php${PhpNode.phpVersion}-mbstring.so`,
+        ini: true
+    },
+    {
+        name: `libonig.so`,
+        url: `${rootPath}/node_modules/php-wasm-mbstring/libonig.so`,
+        ini: false
+    },
 ]
 
 // works around PhpNode and PhpCgiNode locate file issues.

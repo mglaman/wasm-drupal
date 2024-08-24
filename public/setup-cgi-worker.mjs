@@ -62,23 +62,32 @@ export default function setupCgiWorker(worker, PhpCgiWorker, prefix, docroot, ty
     channel.addEventListener('message', async ({ data }) => {
         const { action, params } = data;
         if (action === 'refresh') {
-            console.log('Refreshing CGI')
-            php.refresh();
+            await navigator.locks.request('cgi-worker-action', async () => {
+                console.log('Refreshing CGI')
+                php.refresh();
+            });
         }
-        if (action === 'set_vhost') {
-            const vHost = {
-                pathPrefix: `/cgi/${params.flavor}`,
-                directory: `/persist/${params.flavor}/web`,
-                entrypoint: 'index.php',
-            };
-            const settings = await php.getSettings();
-            const vHostExists = settings.vHosts.find(existing => existing.pathPrefix === vHost.pathPrefix);
+        else if (action === 'set_vhost') {
+            await navigator.locks.request('cgi-worker-action', async () => {
+                const vHost = {
+                    pathPrefix: `/cgi/${params.flavor}`,
+                    directory: `/persist/${params.flavor}/web`,
+                    entrypoint: 'index.php',
+                };
+                const settings = await php.getSettings();
+                const vHostExists = settings.vHosts.find(existing => existing.pathPrefix === vHost.pathPrefix);
 
-            if (!vHostExists) {
-                settings.vHosts.push(vHost)
-                await php.setSettings(settings)
-                await php.storeInit()
-            }
+                if (!vHostExists) {
+                    settings.vHosts.push(vHost)
+                    await php.setSettings(settings)
+                    await php.storeInit()
+                }
+            });
+        }
+        else if (action === 'set_cookie') {
+            await navigator.locks.request('cgi-worker-action', async () => {
+                cookies.set(params.name, params.id)
+            });
         }
     })
 

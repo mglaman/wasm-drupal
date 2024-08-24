@@ -94,6 +94,13 @@ export default class TrialManager extends HTMLElement {
             this.worker.postMessage({ action: 'stop' })
         }
 
+        if (type === 'set_cookie') {
+            this.channel.postMessage({
+                action: 'set_cookie',
+                params: data.params
+            })
+        }
+
         if (action === 'started') {
             this.setAttribute('mode', 'new_session');
             this.setAttribute('message', 'Starting runtime')
@@ -140,6 +147,7 @@ export default class TrialManager extends HTMLElement {
                             profile: this.getAttribute('profile') || 'standard',
                             recipes: this.recipes,
                             langcode: this.getAttribute('langcode') || 'en',
+                            autoLogin: this.getAttribute('auto-login') || true,
                         }
                     }
                 })

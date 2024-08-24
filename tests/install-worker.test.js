@@ -59,14 +59,18 @@ describe('install worker', () => {
                 params: {
                     flavor: 'foo',
                     artifact: '/foo/bar/baz.zip',
+                    installParameters: {
+                        autoLogin: true,
+                    }
                 }
             },
             'finished',
         )
 
-        expect(fetchMock.requests().length).toEqual(3);
+        expect(fetchMock.requests().length).toEqual(4);
         expect(fetchMock.requests()[0].url).toEqual('/foo/bar/baz.zip');
         expect(fetchMock.requests()[1].url).toEqual('/assets/init.phpcode');
         expect(fetchMock.requests()[2].url).toEqual('/assets/install-site.phpcode');
+        expect(fetchMock.requests()[3].url).toEqual('/assets/login-admin.phpcode');
     })
 })

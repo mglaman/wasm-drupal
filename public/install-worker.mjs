@@ -117,6 +117,7 @@ self.onmessage = async ({data }) => {
                 console.log('Writing install parameters');
                 await php.writeFile(`/config/${flavor}-install-params.json`, JSON.stringify({
                     langcode: 'en',
+                    host: (new URL(globalThis.location || 'http://localhost')).host,
                     ...params.installParameters
                 }))
 
@@ -139,6 +140,17 @@ self.onmessage = async ({data }) => {
                         message
                     })
                     return;
+                }
+
+                const {autoLogin = false } = params.installParameters
+                if (autoLogin) {
+                    postMessage({
+                        action: 'status',
+                        params,
+                        message: 'Logging you in'
+                    })
+                    const autoLoginCode = await (await fetch('/assets/login-admin.phpcode')).text();
+                    await php.run(autoLoginCode);
                 }
 
 

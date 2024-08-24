@@ -57,6 +57,12 @@ describe('install-site.phpcode', () => {
         assertOutput(stdErr, '')
         stdOut.length = 0;
 
+        const stat = fs.statSync(`${persistFixturePath}/drupal/web/sites/default`)
+        expect(stat.mode & 0o777).toStrictEqual(0o775)
+
+        const statSettings = fs.statSync(`${persistFixturePath}/drupal/web/sites/default/settings.php`)
+        expect(statSettings.mode & 0o777).toStrictEqual(0o664)
+
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
         phpCgi.cookies.set(loginOutput.params.name, loginOutput.params.id)
 
@@ -107,6 +113,12 @@ describe('install-site.phpcode', () => {
 
         await runPhpCode(php, rootPath + '/public/assets/login-admin.phpcode')
         const loginOutput = JSON.parse(stdOut.join('').trim());
+
+        const stat = fs.statSync(`${persistFixturePath}/drupal/web/sites/default`)
+        expect(stat.mode & 0o777).toStrictEqual(0o775)
+
+        const statSettings = fs.statSync(`${persistFixturePath}/drupal/web/sites/default/settings.php`)
+        expect(statSettings.mode & 0o777).toStrictEqual(0o664)
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
         phpCgi.cookies.set(loginOutput.params.name, loginOutput.params.id)

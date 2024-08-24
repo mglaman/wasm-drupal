@@ -18,6 +18,13 @@ chdir($docroot . '/web');
 
 $skip_install = $install_params['skip'] ?? false;
 if ($skip_install) {
+    if (is_dir('sites/default')) {
+        chmod('sites/default', 0775);
+    }
+    if (is_file('sites/default/settings.php')) {
+        chmod('sites/default/settings.php', 0664);
+
+    }
     if (!is_dir('sites/default/files/css') && !mkdir('sites/default/files/css') && !is_dir('sites/default/files/css')) {
         throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/css'));
     }
@@ -104,6 +111,9 @@ try {
         ->set('css.preprocess', false)
         ->set('js.preprocess', false)
         ->save();
+
+    chmod('sites/default', 0775);
+    chmod('sites/default/settings.php', 0664);
 
 } catch (\Exception $e) {
     print json_encode([

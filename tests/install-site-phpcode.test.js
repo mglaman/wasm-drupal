@@ -155,7 +155,9 @@ describe('install-site.phpcode', () => {
         await runPhpCode(php, rootPath + '/public/assets/login-admin.phpcode')
         assertOutput(stdErr, '')
         const loginOutput = JSON.parse(stdOut.join('').trim());
-        console.log(loginOutput)
+
+        const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
+        phpCgi.cookies.set(loginOutput.params.name, loginOutput.params.id)
 
         const response = await phpCgi.request({
             connection: {

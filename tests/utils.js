@@ -224,3 +224,16 @@ export function copyExistingBuildFixture(persistFixturePath, name) {
         recursive: true
     })
 }
+
+export async function doRequest(phpCgi, url, method = 'GET') {
+    return await phpCgi.request({
+        connection: {
+            encrypted: false,
+        },
+        method,
+        url,
+        headers: {
+            host: globalThis.location.host
+        }
+    })
+}

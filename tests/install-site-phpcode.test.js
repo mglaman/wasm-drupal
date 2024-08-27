@@ -10,7 +10,7 @@ import {
     writeFlavorTxt,
     copyArtifactFixture,
     createCgiPhp,
-    copyExistingBuildFixture, writeInstallParams
+    copyExistingBuildFixture, writeInstallParams, doRequest
 } from './utils'
 
 describe('install-site.phpcode', () => {
@@ -137,6 +137,49 @@ describe('install-site.phpcode', () => {
         assertOutput(cgiOut, 'GET /cgi/drupal 200')
         assertOutput(cgiErr, '')
         expect(text).toContain('/cgi/drupal/user/logout')
+    })
+    it('works with interactive installer', async ({ configFixturePath, persistFixturePath }) => {
+        writeFlavorTxt(configFixturePath)
+        writeInstallParams(configFixturePath, {
+            langcode: 'en',
+            skip: false,
+            siteName: 'test',
+            profile: 'standard',
+            recipes: [],
+            host: globalThis.location.host,
+        })
+        copyExistingBuildFixture(persistFixturePath, 'drupal-core')
+
+        const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
+
+        let response;
+        response = await doRequest(phpCgi, '/cgi/drupal')
+        const text = await response.text()
+        assertOutput(cgiOut, 'GET /cgi/drupal 302')
+        assertOutput(cgiErr, '')
+        expect(response.headers.get('location'), '/cgi/drupal/core/install.php')
+        expect(text).toContain('Redirecting to /cgi/drupal/core/install.php')
+
+        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php')
+        // @todo get `form_build_id`, `form_id, and `op` to submit form via POST
+        // @see https://github.com/mglaman/drupal-test-helpers/blob/main/src/RequestTrait.php#L27
+        expect(await response.text()).toContain('/cgi/drupal/core/install.php?langcode=en')
+
+        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en')
+        expect(await response.text()).toContain('Select an installation profile')
+
+        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en&profile=minimal')
+        expect(await response.text()).toContain('Database configuration')
+
+        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en&profile=minimal')
+        expect(await response.text()).toContain('Requirements review')
+        // opcache warning
+        expect(await response.text()).toContain('PHP OPcode caching can improve your')
+        // limited date warning
+        expect(await response.text()).toContain('limited to using 32-bit integers')
+
+        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en&profile=minimal&continue=1')
+        console.log(await response.text())
     })
 }, {
     timeout: 90000

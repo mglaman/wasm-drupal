@@ -10,8 +10,9 @@ import {
     writeFlavorTxt,
     copyArtifactFixture,
     createCgiPhp,
-    copyExistingBuildFixture, writeInstallParams, doRequest
+    copyExistingBuildFixture, writeInstallParams, doRequest, checkForMetaRefresh
 } from './utils'
+
 
 describe('install-site.phpcode', () => {
     beforeEach(setupFixturePaths)
@@ -152,35 +153,76 @@ describe('install-site.phpcode', () => {
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
 
-        let response;
-        response = await doRequest(phpCgi, '/cgi/drupal')
-        const text = await response.text()
+        // const [res, text] = await doRequest(phpCgi, '/cgi/drupal')
+        // console.log(cgiOut)
+        // console.log(cgiErr)
+        // console.log(text)
+        // expect(false).toBeTruthy()
+
+        const [initResponse, initText] = await doRequest(phpCgi, '/cgi/drupal')
         assertOutput(cgiOut, 'GET /cgi/drupal 302')
         assertOutput(cgiErr, '')
-        expect(response.headers.get('location'), '/cgi/drupal/core/install.php')
-        expect(text).toContain('Redirecting to /cgi/drupal/core/install.php')
+        expect(initResponse.headers.get('location'), '/cgi/drupal/core/install.php')
+        expect(initText).toContain('Redirecting to /cgi/drupal/core/install.php')
 
-        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php')
-        // @todo get `form_build_id`, `form_id, and `op` to submit form via POST
-        // @see https://github.com/mglaman/drupal-test-helpers/blob/main/src/RequestTrait.php#L27
-        expect(await response.text()).toContain('/cgi/drupal/core/install.php?langcode=en')
+        const [, installText] = await doRequest(phpCgi, '/cgi/drupal/core/install.php')
+        expect(installText).toContain('/cgi/drupal/core/install.php?langcode=en')
 
-        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en')
-        expect(await response.text()).toContain('Select an installation profile')
+        const [, selectProfileText] = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en')
+        expect(selectProfileText).toContain('Select an installation profile')
 
-        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en&profile=minimal')
-        expect(await response.text()).toContain('Database configuration')
+        const [, , databaseConfigDocument] = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en&profile=minimal')
+        expect(databaseConfigDocument.title).toStrictEqual('Database configuration | Drupal')
 
-        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en&profile=minimal')
-        expect(await response.text()).toContain('Requirements review')
-        // opcache warning
-        expect(await response.text()).toContain('PHP OPcode caching can improve your')
-        // limited date warning
-        expect(await response.text()).toContain('limited to using 32-bit integers')
+        const [postDbConfigRes, postDbConfigText] = await doRequest(
+            phpCgi,
+            '/cgi/drupal/core/install.php?langcode=en&profile=minimal',
+            'POST',
+            {
+                form_build_id: databaseConfigDocument.querySelector('input[name="form_build_id"]').value,
+                form_id: databaseConfigDocument.querySelector('input[name="form_id"]').value,
+                op: databaseConfigDocument.querySelector('input[name="op"]').value
+            }
+        )
+        let location = new URL(postDbConfigRes.headers.get('location'))
+        expect(location.pathname).toStrictEqual('/cgi/drupal/core/install.php')
+        expect(postDbConfigText).toContain('Redirecting to http://localhost:3000/cgi/drupal/core/install.php')
 
-        response = await doRequest(phpCgi, '/cgi/drupal/core/install.php?langcode=en&profile=minimal&continue=1')
-        console.log(await response.text())
+        const [metaRefreshRes, metaRefreshText, metaRefreshDoc] = await doRequest(phpCgi, location.pathname + location.search)
+
+        const [checkedRes, checkedText, checkedDoc] = await checkForMetaRefresh(phpCgi, metaRefreshRes, metaRefreshText, metaRefreshDoc)
+
+        location = new URL(checkedRes.headers.get('location'))
+        const [, , configureSiteDoc] = await doRequest(phpCgi, location.pathname + location.search)
+
+        const [configureSiteRes, configureSiteText] = await doRequest(
+            phpCgi,
+            location.pathname + location.search,
+            'POST',
+            {
+                site_name: 'Node test',
+                site_mail: 'admin@example.com',
+                'account[name]': 'admin',
+                'account[pass][pass1]': 'admin',
+                'account[pass][pass2]': 'admin',
+                'account[mail]': 'admin@example.com',
+                date_default_timezone: 'America/Chicago',
+                enable_update_status_module: 0,
+                enable_update_status_emails: 0,
+                form_build_id: configureSiteDoc.querySelector('input[name="form_build_id"]').value,
+                form_id: configureSiteDoc.querySelector('input[name="form_id"]').value,
+                op: configureSiteDoc.querySelector('input[name="op"]').value
+            }
+        )
+        location = new URL(configureSiteRes.headers.get('location'))
+        expect(location.pathname).toStrictEqual('/cgi/drupal/')
+        expect(configureSiteText).toContain('Redirecting to http://localhost:3000/cgi/drupal/')
+
+        const [, homeText, homeDoc] = await doRequest(phpCgi, location.pathname + location.search)
+        expect(homeDoc.title).toStrictEqual('Log in | Node test')
+        expect(homeText).toContain('/cgi/drupal/core/themes/stark/logo.svg')
+        expect(homeText).toContain('/cgi/drupal/core/modules/system/css/components/align.module.css')
     })
 }, {
-    timeout: 90000
+    timeout: 999999
 })

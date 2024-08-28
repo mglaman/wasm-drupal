@@ -6,6 +6,8 @@ import {PhpCgiNode} from "php-cgi-wasm/PhpCgiNode.mjs";
 import fs from "node:fs";
 import {expect} from "vitest";
 import crypto from "node:crypto";
+import {Window} from "happy-dom";
+import querystring from "node:querystring";
 
 export const rootPath = dirname(import.meta.dirname);
 export const rootFixturePath = rootPath + '/tests/fixtures'
@@ -147,9 +149,32 @@ export function createCgiPhp({ configFixturePath, persistFixturePath }) {
                 entrypoint: 'index.php',
             }
         ],
+        /**
+         *
+         * @param {Request} request
+         * @param {Response} response
+         */
         onRequest(request, response) {
             const url = new URL(request.url);
-            stdOut.push(`${request.method} ${url.pathname} ${response.status}`)
+            stdOut.push(`${request.method} ${url.pathname}${url.search} ${response.status}`)
+
+            // @todo this needs to go into `setupCgiWorker` and keep $base_path fix.
+            if (response.headers.has('location')) {
+                try {
+                    const originalLocation = response.headers.get('location')
+                    const location = new URL(response.headers.get('location'), globalThis.location.toString());
+                    if (!location.pathname.startsWith('/cgi/drupal')) {
+                        if (location.pathname === '/install.php') {
+                            location.pathname = '/core' + location.pathname;
+                        }
+                        location.pathname = '/cgi/drupal' + location.pathname;
+                        response.headers.set('location', location.toString())
+                        stdOut.push(`Redirect location to ${response.headers.get('location')}`)
+                    }
+                } catch (e) {
+                    console.log(response.headers.get('location'))
+                }
+            }
         },
         notFound(request) {
             const url = new URL(request.url);
@@ -225,8 +250,8 @@ export function copyExistingBuildFixture(persistFixturePath, name) {
     })
 }
 
-export async function doRequest(phpCgi, url, method = 'GET') {
-    return await phpCgi.request({
+export async function doRequest(phpCgi, url, method = 'GET', body = null) {
+    const request = {
         connection: {
             encrypted: false,
         },
@@ -234,6 +259,35 @@ export async function doRequest(phpCgi, url, method = 'GET') {
         url,
         headers: {
             host: globalThis.location.host
+        },
+    };
+    if (body) {
+        const buffer = new TextEncoder().encode(querystring.stringify(body));
+        request.body = new ReadableStream({
+            start(controller) {
+                controller.enqueue(buffer);
+                controller.close();
+            }
+        })
+    }
+    const response = await phpCgi.request(request)
+    const text = await response.text()
+    const document = (new Window()).document
+    document.write(text)
+    return [response, text, document]
+}
+
+export async function checkForMetaRefresh(phpCgi, response, text, document) {
+    if (response.status === 200) {
+        const meta = document.querySelector('meta[http-equiv="Refresh"]');
+        if (meta) {
+            const match = meta.content.match(/\d+;\s*URL=\'?(?<url>[^\']*)/i)
+            if (match) {
+                const url = match.groups.url
+                const [newRes, newText, newDocument] = await doRequest(phpCgi, url)
+                return await checkForMetaRefresh(phpCgi, newRes, newText, newDocument)
+            }
         }
-    })
+    }
+    return [response, text, document]
 }

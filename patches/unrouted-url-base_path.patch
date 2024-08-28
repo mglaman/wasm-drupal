@@ -1,0 +1,14 @@
+diff --git a/core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php b/core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php
+index b4746186bf3..17486b7f7ef 100644
+--- a/core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php
++++ b/core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php
+@@ -128,7 +128,8 @@ protected function buildLocalUrl($uri, array $options = [], $collect_bubbleable_
+     $uri = ltrim($uri, '/');
+ 
+     // Add any subdirectory where Drupal is installed.
+-    $current_base_path = $request->getBasePath() . '/';
++    global $base_path;
++    $current_base_path = $base_path;
+ 
+     if ($options['absolute']) {
+       $current_base_url = $request->getSchemeAndHttpHost() . $current_base_path;

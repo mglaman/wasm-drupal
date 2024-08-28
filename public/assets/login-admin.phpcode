@@ -30,9 +30,12 @@ $request = Request::create('/cgi/drupal/', 'GET', [], [], [], [
 ]);
 $kernel = DrupalKernel::createFromRequest($request, $class_loader, 'prod');
 $kernel->boot();
+$kernel->loadLegacyIncludes();
 
 $container = $kernel->getContainer();
 $container->get('request_stack')->push($request);
+
+$container->get('module_handler')->loadAll();
 
 /** @var \Symfony\Component\HttpFoundation\Session\Session $session */
 $session = $container->get('session');

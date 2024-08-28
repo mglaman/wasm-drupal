@@ -5,6 +5,7 @@ import {
     runPhpCode,
     assertOutput,
     rootPath,
+    rootFixturePath,
     setupFixturePaths,
     cleanupFixturePaths,
     writeFlavorTxt,
@@ -120,6 +121,41 @@ describe('install-site.phpcode', () => {
 
         const statSettings = fs.statSync(`${persistFixturePath}/drupal/web/sites/default/settings.php`)
         expect(statSettings.mode & 0o777).toStrictEqual(0o664)
+
+        const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
+        phpCgi.cookies.set(loginOutput.params.name, loginOutput.params.id)
+
+        const response = await phpCgi.request({
+            connection: {
+                encrypted: false,
+            },
+            method: 'GET',
+            url: '/cgi/drupal',
+            headers: {
+                host: globalThis.location.host
+            }
+        })
+        const text = await response.text()
+        assertOutput(cgiOut, 'GET /cgi/drupal 200')
+        assertOutput(cgiErr, '')
+        expect(text).toContain('/cgi/drupal/user/logout')
+    })
+    it.skipIf(!fs.existsSync(`${rootFixturePath}/drupal-cms`))('installs drupal-cms', async ({ configFixturePath, persistFixturePath }) => {
+        writeFlavorTxt(configFixturePath)
+        writeInstallParams(configFixturePath, {
+            langcode: 'en',
+            skip: false,
+            siteName: 'test',
+            profile: 'standard',
+            recipes: [],
+            host: globalThis.location.host,
+        })
+        copyExistingBuildFixture(persistFixturePath, 'drupal-cms')
+
+        const [stdOut, stdErr, php] = createPhp({ configFixturePath, persistFixturePath })
+        await runPhpCode(php, rootPath + '/public/assets/login-admin.phpcode')
+        assertOutput(stdErr, '')
+        const loginOutput = JSON.parse(stdOut.join('').trim());
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
         phpCgi.cookies.set(loginOutput.params.name, loginOutput.params.id)

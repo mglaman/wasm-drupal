@@ -20,6 +20,8 @@ runs:
         composer config --merge --json 'extra.patches.drupal/core' '{"Remove Fibers from Renderer": "../patches/renderer-remove-fibers.patch"}'
         composer config --merge --json 'extra.patches.drupal/core' '{"Remove file_system service usage from SQLite installer": "../patches/sqlite-file_system-service.patch"}'
         composer config --merge --json 'extra.patches.drupal/core' '{"Use base_path global in unrouted url assembled": "../patches/unrouted-url-base_path.patch"}'
+        composer config --merge --json 'extra.patches.drupal/core' '{"Reqs to OK": "../patches/system-reqs-wasm.patch"}'
+        composer config --merge --json 'extra.patches.drupal/core' '{"Install to batch base: fix": "../patches/install-core-base-path-url-batch.patch"}'
         
         composer require cweagans/composer-patches --no-install
         composer config --no-plugins allow-plugins.cweagans/composer-patches true

@@ -1,0 +1,22 @@
+diff --git a/core/modules/system/system.install b/core/modules/system/system.install
+index b7deb9dd4b9..596793e3d4e 100644
+--- a/core/modules/system/system.install
++++ b/core/modules/system/system.install
+@@ -396,7 +396,7 @@ function system_requirements($phase) {
+     if (!OpCodeCache::isEnabled()) {
+       $requirements['php_opcache'] = [
+         'value' => t('Not enabled'),
+-        'severity' => REQUIREMENT_WARNING,
++        'severity' => REQUIREMENT_OK,
+         'description' => t('PHP OPcode caching can improve your site\'s performance considerably. It is <strong>highly recommended</strong> to have <a href="http://php.net/manual/opcache.installation.php" target="_blank">OPcache</a> installed on your server.'),
+       ];
+     }
+@@ -1430,7 +1430,7 @@ function system_requirements($phase) {
+       'title' => t('Limited date range'),
+       'value' => t('Your PHP installation has a limited date range.'),
+       'description' => t('You are running on a system where PHP is compiled or limited to using 32-bit integers. This will limit the range of dates and timestamps to the years 1901-2038. Read about the <a href=":url">limitations of 32-bit PHP</a>.', [':url' => 'https://www.drupal.org/docs/system-requirements/limitations-of-32-bit-php']),
+-      'severity' => REQUIREMENT_WARNING,
++      'severity' => REQUIREMENT_OK,
+     ];
+   }
+ 

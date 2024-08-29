@@ -157,24 +157,6 @@ export function createCgiPhp({ configFixturePath, persistFixturePath }) {
         onRequest(request, response) {
             const url = new URL(request.url);
             stdOut.push(`${request.method} ${url.pathname}${url.search} ${response.status}`)
-
-            // @todo this needs to go into `setupCgiWorker` and keep $base_path fix.
-            if (response.headers.has('location')) {
-                try {
-                    const originalLocation = response.headers.get('location')
-                    const location = new URL(response.headers.get('location'), globalThis.location.toString());
-                    if (!location.pathname.startsWith('/cgi/drupal')) {
-                        if (location.pathname === '/install.php') {
-                            location.pathname = '/core' + location.pathname;
-                        }
-                        location.pathname = '/cgi/drupal' + location.pathname;
-                        response.headers.set('location', location.toString())
-                        stdOut.push(`Redirect location to ${response.headers.get('location')}`)
-                    }
-                } catch (e) {
-                    console.log(response.headers.get('location'))
-                }
-            }
         },
         notFound(request) {
             const url = new URL(request.url);

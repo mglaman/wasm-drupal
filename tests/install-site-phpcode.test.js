@@ -189,12 +189,6 @@ describe('install-site.phpcode', () => {
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
 
-        // const [res, text] = await doRequest(phpCgi, '/cgi/drupal')
-        // console.log(cgiOut)
-        // console.log(cgiErr)
-        // console.log(text)
-        // expect(false).toBeTruthy()
-
         const [initResponse, initText] = await doRequest(phpCgi, '/cgi/drupal')
         assertOutput(cgiOut, 'GET /cgi/drupal 302')
         assertOutput(cgiErr, '')
@@ -226,7 +220,7 @@ describe('install-site.phpcode', () => {
 
         const [metaRefreshRes, metaRefreshText, metaRefreshDoc] = await doRequest(phpCgi, location.pathname + location.search)
 
-        const [checkedRes, checkedText, checkedDoc] = await checkForMetaRefresh(phpCgi, metaRefreshRes, metaRefreshText, metaRefreshDoc)
+        const [checkedRes] = await checkForMetaRefresh(phpCgi, metaRefreshRes, metaRefreshText, metaRefreshDoc)
 
         location = new URL(checkedRes.headers.get('location'))
         const [, , configureSiteDoc] = await doRequest(phpCgi, location.pathname + location.search)
@@ -254,10 +248,14 @@ describe('install-site.phpcode', () => {
         expect(location.pathname).toStrictEqual('/cgi/drupal/')
         expect(configureSiteText).toContain('Redirecting to http://localhost:3000/cgi/drupal/')
 
-        const [, homeText, homeDoc] = await doRequest(phpCgi, location.pathname + location.search)
-        expect(homeDoc.title).toStrictEqual('Log in | Node test')
-        expect(homeText).toContain('/cgi/drupal/core/themes/stark/logo.svg')
-        expect(homeText).toContain('/cgi/drupal/core/modules/system/css/components/align.module.css')
+        const [postInstallRes, , ] = await doRequest(phpCgi, location.pathname + location.search)
+        location = new URL(postInstallRes.headers.get('location'))
+        expect(location.pathname).toStrictEqual('/cgi/drupal/user/1')
+
+        const [, finishedText, finishedDoc] = await doRequest(phpCgi, location.pathname + location.search)
+        expect(finishedDoc.title).toStrictEqual('admin | Node test')
+        expect(finishedText).toContain('/cgi/drupal/core/themes/stark/logo.svg')
+        expect(finishedText).toContain('/cgi/drupal/core/modules/system/css/components/align.module.css')
     })
 }, {
     timeout: 999999

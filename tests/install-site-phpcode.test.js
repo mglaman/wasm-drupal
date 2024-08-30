@@ -141,15 +141,6 @@ describe('install-site.phpcode', () => {
         expect(text).toContain('/cgi/drupal/user/logout')
     })
     it.skipIf(!fs.existsSync(`${rootFixturePath}/drupal-cms`))('installs drupal-cms', async ({ configFixturePath, persistFixturePath }) => {
-        writeFlavorTxt(configFixturePath)
-        writeInstallParams(configFixturePath, {
-            langcode: 'en',
-            skip: false,
-            siteName: 'test',
-            profile: 'drupal_cms_installer',
-            recipes: ['drupal_cms', 'drupal_cms_multilingual'],
-            host: globalThis.location.host,
-        })
         copyExistingBuildFixture(persistFixturePath, 'drupal-cms')
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
@@ -228,15 +219,6 @@ describe('install-site.phpcode', () => {
 
     })
     it('works with interactive installer', async ({ configFixturePath, persistFixturePath }) => {
-        writeFlavorTxt(configFixturePath)
-        writeInstallParams(configFixturePath, {
-            langcode: 'en',
-            skip: false,
-            siteName: 'test',
-            profile: 'standard',
-            recipes: [],
-            host: globalThis.location.host,
-        })
         copyExistingBuildFixture(persistFixturePath, 'drupal-core')
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });

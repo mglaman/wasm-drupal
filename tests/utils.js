@@ -6,6 +6,8 @@ import {PhpCgiNode} from "php-cgi-wasm/PhpCgiNode.mjs";
 import fs from "node:fs";
 import {expect} from "vitest";
 import crypto from "node:crypto";
+import {Window} from "happy-dom";
+import querystring from "node:querystring";
 
 export const rootPath = dirname(import.meta.dirname);
 export const rootFixturePath = rootPath + '/tests/fixtures'
@@ -96,6 +98,16 @@ const sharedLibs = [
         url: `${rootPath}/node_modules/php-wasm-iconv/libiconv.so`,
         ini: false
     },
+    {
+        name: `php${PhpNode.phpVersion}-mbstring.so`,
+        url: `${rootPath}/node_modules/php-wasm-mbstring/php${PhpNode.phpVersion}-mbstring.so`,
+        ini: true
+    },
+    {
+        name: `libonig.so`,
+        url: `${rootPath}/node_modules/php-wasm-mbstring/libonig.so`,
+        ini: false
+    },
 ]
 
 // works around PhpNode and PhpCgiNode locate file issues.
@@ -137,9 +149,14 @@ export function createCgiPhp({ configFixturePath, persistFixturePath }) {
                 entrypoint: 'index.php',
             }
         ],
+        /**
+         *
+         * @param {Request} request
+         * @param {Response} response
+         */
         onRequest(request, response) {
             const url = new URL(request.url);
-            stdOut.push(`${request.method} ${url.pathname} ${response.status}`)
+            stdOut.push(`${request.method} ${url.pathname}${url.search} ${response.status}`)
         },
         notFound(request) {
             const url = new URL(request.url);
@@ -213,4 +230,46 @@ export function copyExistingBuildFixture(persistFixturePath, name) {
     fs.cpSync(`${rootFixturePath}/${name}`, `${persistFixturePath}/drupal`, {
         recursive: true
     })
+}
+
+export async function doRequest(phpCgi, url, method = 'GET', body = null) {
+    const request = {
+        connection: {
+            encrypted: false,
+        },
+        method,
+        url,
+        headers: {
+            host: globalThis.location.host
+        },
+    };
+    if (body) {
+        const buffer = new TextEncoder().encode(querystring.stringify(body));
+        request.body = new ReadableStream({
+            start(controller) {
+                controller.enqueue(buffer);
+                controller.close();
+            }
+        })
+    }
+    const response = await phpCgi.request(request)
+    const text = await response.text()
+    const document = (new Window()).document
+    document.write(text)
+    return [response, text, document]
+}
+
+export async function checkForMetaRefresh(phpCgi, response, text, document) {
+    if (response.status === 200) {
+        const meta = document.querySelector('meta[http-equiv="Refresh"]');
+        if (meta) {
+            const match = meta.content.match(/\d+;\s*URL=\'?(?<url>[^\']*)/i)
+            if (match) {
+                const url = match.groups.url
+                const [newRes, newText, newDocument] = await doRequest(phpCgi, url)
+                return await checkForMetaRefresh(phpCgi, newRes, newText, newDocument)
+            }
+        }
+    }
+    return [response, text, document]
 }

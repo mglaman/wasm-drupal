@@ -4,7 +4,7 @@ export default class CookieMap extends Map {
     store = 'COOKIES'
 
     constructor(iterable) {
-        super(iterable);
+        super();
 
         this._db = this._openDB();
         this._db.then(db => {
@@ -15,6 +15,9 @@ export default class CookieMap extends Map {
             request.onsuccess = (event) => {
                 const entries = event.target.result;
                 entries.forEach(({ key, value }) => super.set(key, value));
+                iterable.forEach(([ key, value ]) => {
+                    this.set(key, value)
+                });
             };
         });
     }

@@ -16,6 +16,11 @@ $install_params = \json_decode(
 
 chdir($docroot . '/web');
 
+$interactive_install = $install_params['interactive'] ?? false;
+if ($interactive_install) {
+    exit;
+}
+
 $skip_install = $install_params['skip'] ?? false;
 if ($skip_install) {
     if (is_dir('sites/default')) {

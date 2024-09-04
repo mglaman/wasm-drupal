@@ -22,7 +22,7 @@ chdir($docroot . '/web');
 
 $class_loader = require $docroot . '/vendor/autoload.php';
 
-$request = Request::create('/cgi/drupal/', 'GET', [], [], [], [
+$request = Request::create("/cgi/$flavor/", 'GET', [], [], [], [
     'HTTP_HOST' => $install_params['host'] ?? 'localhost',
     'REMOTE_ADDR' => '127.0.0.1',
     'SCRIPT_FILENAME' => "/persist/$flavor/web/index.php",

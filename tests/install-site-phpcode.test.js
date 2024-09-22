@@ -141,50 +141,84 @@ describe('install-site.phpcode', () => {
         expect(text).toContain('/cgi/drupal/user/logout')
     })
     it.skipIf(!fs.existsSync(`${rootFixturePath}/drupal-cms`))('installs drupal-cms', async ({ configFixturePath, persistFixturePath }) => {
-        writeFlavorTxt(configFixturePath)
-        writeInstallParams(configFixturePath, {
-            langcode: 'en',
-            skip: false,
-            siteName: 'test',
-            profile: 'standard',
-            recipes: [],
-            host: globalThis.location.host,
-        })
         copyExistingBuildFixture(persistFixturePath, 'drupal-cms')
 
-        const [stdOut, stdErr, php] = createPhp({ configFixturePath, persistFixturePath })
-        await runPhpCode(php, rootPath + '/public/assets/login-admin.phpcode')
-        assertOutput(stdErr, '')
-        const loginOutput = JSON.parse(stdOut.join('').trim());
-
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });
-        phpCgi.cookies.set(loginOutput.params.name, loginOutput.params.id)
+        let location;
 
-        const response = await phpCgi.request({
-            connection: {
-                encrypted: false,
-            },
-            method: 'GET',
-            url: '/cgi/drupal',
-            headers: {
-                host: globalThis.location.host
-            }
-        })
-        const text = await response.text()
-        assertOutput(cgiOut, 'GET /cgi/drupal 200')
+        const [initResponse, initText] = await doRequest(phpCgi, '/cgi/drupal')
+        assertOutput(cgiOut, 'GET /cgi/drupal 302')
         assertOutput(cgiErr, '')
-        expect(text).toContain('/cgi/drupal/user/logout')
+
+        expect(initResponse.headers.get('location'), '/cgi/drupal/core/install.php')
+        expect(initText).toContain('Redirecting to /cgi/drupal/core/install.php')
+
+        const [, recipesText, recipesDoc] = await doRequest(phpCgi, '/cgi/drupal/core/install.php')
+        expect(recipesText).toContain('What are your top goals?')
+
+        const [postRecipesRes, postRecipesText,] = await doRequest(
+            phpCgi,
+            '/cgi/drupal/core/install.php',
+            'POST',
+            {
+                form_build_id: recipesDoc.querySelector('input[name="form_build_id"]').value,
+                form_id: recipesDoc.querySelector('input[name="form_id"]').value,
+                op: 'Skip this step'
+            }
+        )
+        location = new URL(postRecipesRes.headers.get('location'))
+        expect(location.pathname).toStrictEqual('/cgi/drupal/core/install.php')
+        expect(location.search).toStrictEqual('?profile=drupal_cms_installer&recipes%5B0%5D=drupal_cms')
+        expect(postRecipesText).toContain('Redirecting to http://localhost:3000/cgi/drupal/core/install.php')
+
+        const [, siteNameFormText, siteNameFormDoc] = await doRequest(phpCgi, location.pathname + location.search)
+        expect(siteNameFormText).toContain('<title>Give your site a name | Drupal CMS</title>')
+
+        const [postSiteNameFormRes, ,] = await doRequest(
+            phpCgi,
+            location.pathname + location.search,
+            'POST',
+            {
+                site_name: 'Node test',
+                form_build_id: siteNameFormDoc.querySelector('input[name="form_build_id"]').value,
+                form_id: siteNameFormDoc.querySelector('input[name="form_id"]').value,
+                op: siteNameFormDoc.querySelector('input[name="op"]').value
+            }
+        )
+        location = new URL(postSiteNameFormRes.headers.get('location'))
+        expect(location.pathname).toStrictEqual('/cgi/drupal/core/install.php')
+        expect(location.search).toStrictEqual('?profile=drupal_cms_installer&recipes%5B0%5D=drupal_cms&site_name=Node%20test')
+
+        const [, , databaseConfigDocument] = await doRequest(phpCgi, location.pathname + location.search)
+        expect(databaseConfigDocument.title).toStrictEqual('Database configuration | Drupal CMS')
+
+        location = new URL(postSiteNameFormRes.headers.get('location'))
+        const [postDbConfigRes, postDbConfigText] = await doRequest(
+            phpCgi,
+            location.pathname + location.search,
+            'POST',
+            {
+                form_build_id: databaseConfigDocument.querySelector('input[name="form_build_id"]').value,
+                form_id: databaseConfigDocument.querySelector('input[name="form_id"]').value,
+                op: databaseConfigDocument.querySelector('input[name="op"]').value
+            }
+        )
+        location = new URL(postDbConfigRes.headers.get('location'))
+        expect(location.pathname).toStrictEqual('/cgi/drupal/core/install.php')
+        expect(postDbConfigText).toContain('Redirecting to http://localhost:3000/cgi/drupal/core/install.php')
+
+        const [metaRefreshRes, metaRefreshText, metaRefreshDoc] = await doRequest(phpCgi, location.pathname + location.search)
+        expect(metaRefreshDoc.title).toStrictEqual('Setting up your site | Drupal CMS')
+
+        const [checkedRes, checkedText] = await checkForMetaRefresh(phpCgi, metaRefreshRes, metaRefreshText, metaRefreshDoc)
+        console.log(checkedText)
+        console.log(cgiErr)
+        // location = new URL(checkedRes.headers.get('location'))
+        // const [, , doc] = await doRequest(phpCgi, location.pathname + location.search)
+        // console.log(doc)
+
     })
     it('works with interactive installer', async ({ configFixturePath, persistFixturePath }) => {
-        writeFlavorTxt(configFixturePath)
-        writeInstallParams(configFixturePath, {
-            langcode: 'en',
-            skip: false,
-            siteName: 'test',
-            profile: 'standard',
-            recipes: [],
-            host: globalThis.location.host,
-        })
         copyExistingBuildFixture(persistFixturePath, 'drupal-core')
 
         const [cgiOut, cgiErr, phpCgi] = createCgiPhp({ configFixturePath, persistFixturePath });

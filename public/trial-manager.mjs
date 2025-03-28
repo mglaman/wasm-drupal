@@ -76,6 +76,13 @@ export default class TrialManager extends HTMLElement {
         return this.getAttribute('install-type')
     }
 
+    get siteName() {
+        if (!this.hasAttribute('site-name')) {
+            return 'Try'
+        }
+        return this.getAttribute('site-name')
+    }
+
     connectedCallback() {
         this.render()
     }
@@ -145,7 +152,7 @@ export default class TrialManager extends HTMLElement {
                         installParameters: {
                             // @see install-site.phpcode
                             installType: this.installType,
-                            siteName: 'Try Drupal CMS',
+                            siteName: this.siteName,
                             langcode: 'en',
                         }
                     }

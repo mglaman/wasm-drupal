@@ -69,7 +69,7 @@ self.onmessage = async ({data }) => {
                     postMessage({
                         action: 'status',
                         params,
-                        message: 'Removing existing Drupal CMS archive'
+                        message: 'Removing existing archive'
                     })
                     console.log('Removing archive');
                     await php.unlink('/persist/artifact.zip')
@@ -77,7 +77,7 @@ self.onmessage = async ({data }) => {
                 postMessage({
                     action: 'status',
                     params,
-                    message: 'Downloading Drupal CMS'
+                    message: 'Downloading archive'
                 })
                 const downloader = fetch(artifact);
 
@@ -103,7 +103,7 @@ self.onmessage = async ({data }) => {
                             postMessage({
                               action: 'status',
                               params,
-                              message: `Downloading Drupal CMS ${Math.round(loaded/total*100)+'%'}`
+                              message: `Downloading archive ${Math.round(loaded/total*100)+'%'}`
                           })
                             controller.enqueue(value);
                             read();
@@ -123,7 +123,7 @@ self.onmessage = async ({data }) => {
                 postMessage({
                     action: 'status',
                     params,
-                    message: 'Saving Drupal CMS'
+                    message: 'Saving archive'
                 })
 
                 await php.writeFile('/config/flavor.txt', flavor)
@@ -132,7 +132,7 @@ self.onmessage = async ({data }) => {
                 postMessage({
                     action: 'status',
                     params,
-                    message: 'Extracting Drupal CMS'
+                    message: 'Extracting archive'
                 })
                 const initPhpCode = fetch('/assets/init.phpcode');
                 await php.binary;
@@ -145,7 +145,7 @@ self.onmessage = async ({data }) => {
                     postMessage({
                         action: 'status',
                         params,
-                        message: 'Preparing Drupal CMS',
+                        message: 'Preparing site',
                     });
 
                     console.log('Writing install parameters');

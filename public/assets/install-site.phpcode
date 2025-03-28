@@ -43,7 +43,7 @@ $parameters = [
     'interactive' => FALSE,
     'site_path' => 'sites/default',
     'parameters' => [
-        'profile' => 'drupal_cms_installer',
+        'profile' => $install_params['profile'] ?? 'standard',
         'langcode' => $install_params['langcode'] ?? 'en',
     ],
     'forms' => [

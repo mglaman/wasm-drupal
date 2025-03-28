@@ -44,7 +44,11 @@ export default class TrialManager extends HTMLElement {
     }
 
     get flavor() {
-        return 'cms'
+        return this.getAttribute('flavor') || 'drupal'
+    }
+
+    set flavor(flavor) {
+        this.setAttribute('flavor', flavor)
     }
 
     get artifact() {

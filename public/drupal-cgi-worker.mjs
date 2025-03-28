@@ -1,8 +1,11 @@
 import {getBroadcastChannel} from "./utils.mjs";
 import CookieMap from "./cookie-map.mjs";
 
+// Fibers are not yet supported in the Wasm runtime.
+// Instead of uninstalling BigPipe, set the `big_pipe_nojs` cookie which disables its functionality.
+// This will make it easier to export the trial experience in the future.
 const cookies = new CookieMap([
-    ['big_pipe_nojs', '1']
+  ['big_pipe_nojs', '1']
 ]);
 
 const onRequest = (request, response) => {
@@ -34,25 +37,23 @@ const sharedLibs = [
     `php\${PHP_VERSION}-simplexml.so`,
 ];
 
-export default function setupCgiWorker(worker, PhpCgiWorker, prefix, docroot, types = {}, vHosts = [], env = {}) {
+export function setUpWorker(worker, PhpCgiWorker, prefix, docroot) {
     const php = new PhpCgiWorker({
         onRequest,
         notFound,
         sharedLibs,
         prefix,
         docroot,
-        vHosts,
         types: {
             jpeg: "image/jpeg",
             jpg: "image/jpeg",
             gif: "image/gif",
             png: "image/png",
-            svg: "image/svg+xml",
-            ...types
+            svg: "image/svg+xml"
         },
         env: {
             HTTP_USER_AGENT: worker.navigator.userAgent,
-            ...env
+            DRUPAL_CMS_TRIAL: '1',
         },
         ini: `
         date.timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}
@@ -69,7 +70,7 @@ export default function setupCgiWorker(worker, PhpCgiWorker, prefix, docroot, ty
                 php.refresh();
             });
         }
-        else if (action === 'set_vhost') {
+        if (action === 'set_vhost') {
             await navigator.locks.request('cgi-worker-action', async () => {
                 const vHost = {
                     pathPrefix: `/cgi/${params.flavor}`,

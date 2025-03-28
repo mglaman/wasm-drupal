@@ -57,6 +57,7 @@ try {
 }
 
 print json_encode([
+        'message' => 'Logged in!',
         'params' => [
             'name' => $session->getName(),
             'id' => $session->getId(),

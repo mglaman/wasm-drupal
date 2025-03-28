@@ -1,6 +1,3 @@
-> [!NOTE]  
-> This repo needs a refresh based on changes that were added into the Drupal CMS trial repository. The Wasm trial was removed from Drupal CMS and this project was on a hiatus. To help bring it back, we need to review the trial code from Drupal CMS at https://git.drupalcode.org/project/drupal_cms/-/tree/2dd5f1d71b1ababa35a2709a6533083c4b2db22e/trial and sync. 
-
 # Drupal on the Edge with Web Assembly
 
 Run Drupal on the edge in your browser with [Web Assembly](https://webassembly.org/).

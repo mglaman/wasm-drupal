@@ -14,32 +14,31 @@ const sharedLibs = [
     `php${PhpWorker.phpVersion}-simplexml.so`,
 ];
 
+console.log('booting PhpWorker')
+const php = new PhpWorker({
+    sharedLibs,
+    persist: [{ mountPath: '/persist' }, { mountPath: '/config' }],
+    ini: `
+    date.timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}
+    `
+})
+php.addEventListener('output', event => {
+    event.detail.forEach(detail => {
+        try {
+            const data = JSON.parse(detail.trim());
+            postMessage({
+                action: `status`,
+                ...data
+            })
+        } catch (e) {
+            console.log(detail)
+        }
+    })
+});
+php.addEventListener('error', event => console.log(event.detail));
+
 self.onmessage = async ({data }) => {
     const { action, params } = data;
-
-    console.log('booting PhpWorker')
-    const php = new PhpWorker({
-        sharedLibs,
-        persist: [{ mountPath: '/persist' }, { mountPath: '/config' }],
-        ini: `
-        date.timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}
-        `
-    })
-    php.addEventListener('output', event => {
-        event.detail.forEach(detail => {
-            try {
-                const data = JSON.parse(detail.trim());
-                postMessage({
-                    action: `status`,
-                    params,
-                    ...data
-                })
-            } catch (e) {
-                console.log(detail)
-            }
-        })
-    });
-    php.addEventListener('error', event => console.log(event.detail));
 
     if (action === 'start') {
         await navigator.locks.request('start', async () => {
@@ -62,7 +61,7 @@ self.onmessage = async ({data }) => {
                 postMessage({
                     action: `finished`,
                     params,
-                    message: 'Session exists'
+                    message: 'Site already exists'
                 })
             } else {
                 const checkArchive = await php.analyzePath('/persist/artifact.zip');
@@ -78,90 +77,126 @@ self.onmessage = async ({data }) => {
                 postMessage({
                     action: 'status',
                     params,
-                    message: 'Downloading artifact'
+                    message: 'Downloading archive'
                 })
-                console.log('Downloading artifact')
                 const downloader = fetch(artifact);
-                const download = await downloader;
+
+                const download = await downloader.then(response => {
+                  const contentEncoding = response.headers.get('content-encoding');
+                  const contentLength = response.headers.get(contentEncoding ? 'x-file-size' : 'content-length');
+                  const total = parseInt(contentLength, 10);
+                  let loaded = 0;
+
+                  return new Response(
+                    new ReadableStream({
+                      start(controller) {
+                        const reader = response.body.getReader();
+
+                        read();
+                        function read() {
+                          reader.read().then(({done, value}) => {
+                            if (done) {
+                              controller.close();
+                              return;
+                            }
+                            loaded += value.byteLength;
+                            postMessage({
+                              action: 'status',
+                              params,
+                              message: `Downloading archive ${Math.round(loaded/total*100)+'%'}`
+                          })
+                            controller.enqueue(value);
+                            read();
+                          }).catch(error => {
+                            console.error(error);
+                            controller.error(error)
+                          })
+                        }
+                      }
+                    })
+                  );
+                })
+
+
                 const zipContents = await download.arrayBuffer();
 
                 postMessage({
                     action: 'status',
                     params,
-                    message: 'Saving artifact'
+                    message: 'Saving archive'
                 })
-                console.log('Writing archive contents')
+
                 await php.writeFile('/config/flavor.txt', flavor)
                 await php.writeFile('/persist/artifact.zip', new Uint8Array(zipContents))
 
                 postMessage({
                     action: 'status',
                     params,
-                    message: 'Extracting artifact'
+                    message: 'Extracting archive'
                 })
-                console.log('Extracting archive...')
-                console.log('fetching init code')
                 const initPhpCode = fetch('/assets/init.phpcode');
                 await php.binary;
 
-                console.log('running init code')
                 const initPhpExitCode = await php.run(await (await initPhpCode).text());
                 console.log(initPhpExitCode)
 
-                postMessage({
-                    action: 'status',
-                    params,
-                    message: 'Installing site'
-                })
+                const installType = params.installParameters.installType;
+                if (installType !== 'interactive') {
+                    postMessage({
+                        action: 'status',
+                        params,
+                        message: 'Preparing site',
+                    });
 
-                console.log('Writing install parameters');
-                await php.writeFile(`/config/${flavor}-install-params.json`, JSON.stringify({
-                    langcode: 'en',
-                    host: (new URL(globalThis.location || 'http://localhost')).host,
-                    ...params.installParameters
-                }))
+                    console.log('Writing install parameters');
+                    await php.writeFile(`/config/${flavor}-install-params.json`, JSON.stringify({
+                        langcode: 'en',
+                        host: (new URL(globalThis.location || 'http://localhost')).host,
+                        ...params.installParameters,
+                    }));
 
-                console.log('Installing site')
-                const installSiteCode = await (await fetch('/assets/install-site.phpcode')).text();
-                console.log('Executing install site code...')
-                try {
-                    const installSiteExitCode = await php.run(installSiteCode);
-                    console.log(installSiteExitCode)
-                } catch(e) {
-                    let message = `An error occured. ${e.name}: ${e.message}`
-                    if (e.name === 'RangeError') {
-                        message += ' See https://github.com/mglaman/wasm-drupal/issues/28';
+                    if (installType === 'automated') {
+                        console.log('Installing site');
+
+                        await php.run(`<?php putenv('DRUPAL_CMS_TRIAL=1');`);
+
+                        const installSiteCode = await (await fetch('/assets/install-site.phpcode')).text();
+                        console.log('Executing install site code...');
+                        try {
+                            const installSiteExitCode = await php.run(installSiteCode);
+                            console.log(installSiteExitCode);
+                        } catch (e) {
+                            let message = `An error occured. ${e.name}: ${e.message}`;
+                            if (e.name === 'RangeError') {
+                                message += ' See https://github.com/mglaman/wasm-drupal/issues/28';
+                            }
+
+                            postMessage({
+                                action: 'status',
+                                type: 'error',
+                                params,
+                                message,
+                            });
+                            return;
+                        }
                     }
 
                     postMessage({
                         action: 'status',
-                        type: 'error',
                         params,
-                        message
-                    })
-                    return;
-                }
-
-                const {autoLogin = false } = params.installParameters
-                if (autoLogin) {
-                    postMessage({
-                        action: 'status',
-                        params,
-                        message: 'Logging you in'
-                    })
+                        message: 'Logging you in',
+                    });
                     const autoLoginCode = await (await fetch('/assets/login-admin.phpcode')).text();
                     await php.run(autoLoginCode);
+                    await php.unlink(`/config/${flavor}-install-params.json`);
                 }
-
 
                 postMessage({
                     action: 'status',
                     params,
-                    message: 'Removing artifact archive'
+                    message: 'Cleaning up files'
                 })
-                console.log('Removing archive');
                 await php.unlink('/config/flavor.txt')
-                await php.unlink(`/config/${flavor}-install-params.json`)
                 await php.unlink('/persist/artifact.zip')
 
                 postMessage({

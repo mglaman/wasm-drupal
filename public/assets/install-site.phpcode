@@ -16,20 +16,13 @@ $install_params = \json_decode(
 
 chdir($docroot . '/web');
 
-$interactive_install = $install_params['interactive'] ?? false;
-if ($interactive_install) {
+$install_type = $install_params['installType'] ?? 'interactive';
+
+if ($install_type === 'interactive') {
     exit;
 }
 
-$skip_install = $install_params['skip'] ?? false;
-if ($skip_install) {
-    if (is_dir('sites/default')) {
-        chmod('sites/default', 0775);
-    }
-    if (is_file('sites/default/settings.php')) {
-        chmod('sites/default/settings.php', 0664);
-
-    }
+if ($install_type === 'preinstalled') {
     if (!is_dir('sites/default/files/css') && !mkdir('sites/default/files/css') && !is_dir('sites/default/files/css')) {
         throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/css'));
     }
@@ -46,14 +39,11 @@ if ($skip_install) {
 
 $class_loader = require $docroot . '/vendor/autoload.php';
 
-
-// @todo have this written by the worker as JSON and parsed from the disk?
 $parameters = [
     'interactive' => FALSE,
     'site_path' => 'sites/default',
     'parameters' => [
         'profile' => $install_params['profile'] ?? 'standard',
-        'recipes' => $install_params['recipes'] ?? [],
         'langcode' => $install_params['langcode'] ?? 'en',
     ],
     'forms' => [
@@ -105,20 +95,8 @@ try {
         $finished++;
     });
 
-    \Drupal::getContainer()->get('module_installer')->uninstall(['big_pipe']);
-
-    \Drupal::configFactory()
-        ->getEditable('system.logging')
-        ->set('error_level', 'verbose')
-        ->save();
-    \Drupal::configFactory()
-        ->getEditable('system.performance')
-        ->set('css.preprocess', false)
-        ->set('js.preprocess', false)
-        ->save();
-
-    chmod('sites/default', 0775);
-    chmod('sites/default/settings.php', 0664);
+    chmod('sites/default', 0755);
+    chmod('sites/default/settings.php', 0644);
 
 } catch (\Exception $e) {
     print json_encode([

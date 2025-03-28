@@ -16,8 +16,8 @@ export default class CookieMap extends Map {
                 const entries = event.target.result;
                 entries.forEach(({ key, value }) => super.set(key, value));
                 iterable.forEach(([ key, value ]) => {
-                    this.set(key, value)
-                });
+                  this.set(key, value)
+              });
             };
         });
     }

@@ -167,7 +167,7 @@ export function createCgiPhp({ configFixturePath, persistFixturePath }) {
             });
         }
     })
-
+    php.cookies.set('big_pipe_nojs', '1')
     return [stdOut, stdErr, php]
 }
 

@@ -11,7 +11,8 @@ import {
     writeFlavorTxt,
     copyArtifactFixture,
     createCgiPhp,
-    copyExistingBuildFixture, writeInstallParams, doRequest, checkForMetaRefresh
+    copyExistingBuildFixture, writeInstallParams, doRequest, checkForMetaRefresh,
+    assertSitesDefaultDirectoryPermissions
 } from './utils'
 
 
@@ -103,6 +104,7 @@ describe('install-site.phpcode', () => {
             profile: 'standard',
             recipes: [],
             host: globalThis.location.host,
+            installType: 'automated',
         })
         copyExistingBuildFixture(persistFixturePath, 'drupal-core')
 

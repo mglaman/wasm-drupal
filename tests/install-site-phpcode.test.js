@@ -175,6 +175,8 @@ describe('install-site.phpcode', () => {
                 op: databaseConfigDocument.querySelector('input[name="op"]').value
             }
         )
+
+        console.log(postDbConfigRes.headers)
         let location = new URL(postDbConfigRes.headers.get('location'))
         expect(location.pathname).toStrictEqual('/cgi/drupal/core/install.php')
         expect(postDbConfigText).toContain('Redirecting to http://localhost:3000/cgi/drupal/core/install.php')

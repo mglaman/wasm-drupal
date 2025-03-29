@@ -29,6 +29,7 @@ describe('install-site.phpcode', () => {
             recipes: [],
             autoLogin: true,
             host: globalThis.location.host,
+            installType: 'automated',
         })
         copyArtifactFixture(persistFixturePath, 'drupal-core.zip')
 
@@ -59,8 +60,7 @@ describe('install-site.phpcode', () => {
         assertOutput(stdErr, '')
         stdOut.length = 0;
 
-        const stat = fs.statSync(`${persistFixturePath}/drupal/web/sites/default`)
-        expect(stat.mode & 0o777).toStrictEqual(0o775)
+        assertSitesDefaultDirectoryPermissions(persistFixturePath)
 
         const statSettings = fs.statSync(`${persistFixturePath}/drupal/web/sites/default/settings.php`)
         expect(statSettings.mode & 0o777).toStrictEqual(0o664)

@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - '.github/workflows/web_build.yml'
-      - 'playground/**'
 jobs:
   web_build:
     name: "Build artifact"
@@ -14,14 +11,21 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
+      - uses: ./.github/actions/create-drupal-core-artifact
+      - run: cp drupal-core/drupal-core.zip tests/fixtures
+      - run: mv drupal-core tests/fixtures
+
       - name: "Install Node"
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: "build"
-        run: make playground-build
-      - name: Upload playground archive
+
+      - run: npm ci
+      - run: npm run test
+      - run: npm run build
+
+      - name: Upload demo archive
         uses: actions/upload-artifact@v4
         with:
-          name: playground
-          path: playground/public
+          name: demo
+          path: public

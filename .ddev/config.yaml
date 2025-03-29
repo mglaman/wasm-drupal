@@ -1,6 +1,6 @@
 name: wasm-drupal
 type: php
-docroot: "playground/public"
+docroot: "public"
 php_version: "8.2"
 webserver_type: nginx-fpm
 xdebug_enabled: false

@@ -1,0 +1,42 @@
+diff --git a/node_modules/php-cgi-wasm/PhpCgiBase.mjs b/node_modules/php-cgi-wasm/PhpCgiBase.mjs
+index 694680d..407b4be 100644
+--- a/node_modules/php-cgi-wasm/PhpCgiBase.mjs
++++ b/node_modules/php-cgi-wasm/PhpCgiBase.mjs
+@@ -307,19 +307,23 @@ export class PhpCgiBase
+ 		else
+ 		{
+ 
+-			path = docroot + '/' + rewrite.substr((vHostPrefix || this.prefix).length);
++			path = docroot + '/' + rewrite.substr((vHostPrefix || this.prefix).length).replace(/^\/+/, '');
+ 			scriptName = path;
+ 		}
+ 
+-		if(vHostEntrypoint)
+-		{
+-			scriptName = vHostPrefix + '/' + vHostEntrypoint;
+-		}
+-
+ 		let originalPath = url.pathname;
+ 
+ 		const extension = path.split('.').pop();
+ 
++		if(vHostEntrypoint)
++		{
++			if (extension === 'php') {
++				scriptName = vHostPrefix + '/' + rewrite.substr((vHostPrefix || this.prefix).length).replace(/^\/+/, '')
++			} else {
++				scriptName = vHostPrefix + '/' + vHostEntrypoint;
++			}
++		}
++
+ 		if(extension !== 'php' && extension !== 'phar')
+ 		{
+ 			const aboutPath = php.FS.analyzePath(path);
+@@ -349,6 +353,7 @@ export class PhpCgiBase
+ 			// Rewrite to index
+ 			path = docroot + '/index.php';
+ 		}
++		originalPath += url.search
+ 
+ 		if(this.maxRequestAge > 0 && Date.now() - requestTimes.get(request) > this.maxRequestAge)
+ 		{

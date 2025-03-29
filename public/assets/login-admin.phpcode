@@ -1,0 +1,66 @@
+<?php
+
+use Drupal\Core\DrupalKernel;
+use Drupal\user\Entity\User;
+use Symfony\Component\HttpFoundation\Request;
+
+$stdErr = fopen('php://stderr', 'w');
+
+set_error_handler(function (...$args) use ($stdErr, &$errors) {
+    fwrite($stdErr, print_r($args, 1));
+});
+
+$flavor = file_get_contents('/config/flavor.txt');
+$docroot = '/persist/' . $flavor;
+
+$install_params = \json_decode(
+    file_get_contents("/config/$flavor-install-params.json") ?: [],
+    true
+);
+
+chdir($docroot . '/web');
+
+$class_loader = require $docroot . '/vendor/autoload.php';
+
+$request = Request::create("/cgi/$flavor/", 'GET', [], [], [], [
+    'HTTP_HOST' => $install_params['host'] ?? 'localhost',
+    'REMOTE_ADDR' => '127.0.0.1',
+    'SCRIPT_FILENAME' => "/persist/$flavor/web/index.php",
+    'SCRIPT_NAME' => "/cgi/$flavor/index.php"
+]);
+$kernel = DrupalKernel::createFromRequest($request, $class_loader, 'prod');
+$kernel->boot();
+$kernel->loadLegacyIncludes();
+
+$container = $kernel->getContainer();
+$container->get('request_stack')->push($request);
+
+$container->get('module_handler')->loadAll();
+
+/** @var \Symfony\Component\HttpFoundation\Session\Session $session */
+$session = $container->get('session');
+$session->start();
+$request->setSession($session);
+
+$account = User::load(1);
+user_login_finalize($account);
+
+try {
+    $session->save();
+} catch (\Throwable $e) {
+    print json_encode([
+            'message' => 'could not get login session',
+            'trace' => $e->getTraceAsString(),
+            'type' => 'login',
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
+    exit(1);
+}
+
+print json_encode([
+        'message' => 'Logged in!',
+        'params' => [
+            'name' => $session->getName(),
+            'id' => $session->getId(),
+        ],
+        'type' => 'set_cookie',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;

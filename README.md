@@ -38,35 +38,36 @@ make serve
 
 Open `http://localhost`
 
-Click **GO**, wait for environment to launch.
+Click **Install** for either Drupal or the Starshot prototype, and then wait for environment to launch.
 
 Log in with
 
-* Username: admin
-* Password: admin
+* Username: `admin`
+* Password: `admin`
 
-## Upcoming: drupal-cgi-worker package
+## Upcoming: drupal-was package
 
 The goal is to split out the JavaScript from this project into a reusable package for others.
 
+* `setup-cgi-worker.mjs` as an easy way to register the service worker for serving a Drupal application
+* `install-worker.mjs` as an easy way to install a Drupal application from an artifact
+
 ## Debugging steps
 
-### Debuging the service worker
+### Clearing all data
 
-Visit chrome://serviceworker-internals/
+Use your browser's "Clear site data" functionality to perform a manual reset.
 
-### Resetting IndexDB
+### Debugging the service worker
 
-1. Open developer console
-2. Under "Application" tab, go to IndexDB
-3. Delete /persist and /config
-4. Unregister service worker
-5. Refresh.
+Visit [chrome://serviceworker-internals/](chrome://serviceworker-internals/)
+
+## Limitations
+
+* php-wasm does not provide an exposed function for running a specific script file, that means scripts like Composer and Drush cannot be directly invoked.
+* php-wasm's SAPI name is `embed`, which breaks any code which checks `PHP_SAPI === 'cli'`, such as Drush.
 
 ## Next steps
 
-- [ ] Figure out why session is periodically lost after first run [#7](https://github.com/mglaman/wasm-drupal/issues/7)
-- [ ] Install Drupal on demand instead of using a prepared SQLite database [#8](https://github.com/mglaman/wasm-drupal/issues/8)
 - [ ] Allow exporting Drupal database to use locally, with DDEV. [#10](https://github.com/mglaman/wasm-drupal/issues/10)
 - [ ] Allow exporting Drupal codebase to use locally, with DDEV. [#11](https://github.com/mglaman/wasm-drupal/issues/11)
-- [ ] Use `vHosts` to have "Drupal core" and "Drupal CMS" options. [#12](https://github.com/mglaman/wasm-drupal/issues/12)

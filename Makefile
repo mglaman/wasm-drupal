@@ -1,34 +1,22 @@
 PWD = $(shell pwd)
 
-build: drupal-install drupal-archive playground-build copy-playground-archive
+build: download-artifacts demo-build
 
 serve:
 	docker run --rm -p 80:80 \
-		-v ${PWD}/playground/Caddyfile:/etc/caddy/Caddyfile \
-		-v ${PWD}/playground/public:/usr/share/caddy \
+		-v ${PWD}/Caddyfile:/etc/caddy/Caddyfile \
+		-v ${PWD}/public:/usr/share/caddy \
 		caddy
 
-drupal-update:
-	cd drupal-src && composer update --ignore-platform-reqs
+download-artifacts:
+	curl -o public/assets/drupal-core.zip 		https://wasm-drupal.mglaman.dev/assets/drupal-core.zip
 
-drupal-build:
-	cd drupal-src && composer install --ignore-platform-reqs
+demo-build:
+	npm install
+	npm run build
 
-drupal-install: drupal-build
-	cd drupal-src && \
-		php vendor/bin/drush site:install --account-pass=admin --yes --site-name="Drupal WASM" && \
-		php vendor/bin/drush pm-uninstall big_pipe --yes
-
-drupal-archive:
-	cd drupal-src && composer archive --format=zip
-	mv drupal-src/drupal-wasm-1.0.zip .
-
-copy-playground-archive:
-	cp drupal-wasm-1.0.zip playground/public/assets
-
-playground-build:
-	cd playground && npm install
-	cd playground && npm run build
+demo-test:
+	npm run test
 
 clean:
-	git clean -fdX
+	cd public && git clean -fdx

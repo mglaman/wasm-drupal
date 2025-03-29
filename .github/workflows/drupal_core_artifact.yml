@@ -1,0 +1,30 @@
+name: "Drupal Core Artifact"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+concurrency: starshot
+jobs:
+  build:
+    name: "Build drupal-core"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - uses: ./.github/actions/create-drupal-core-artifact
+      - name: Upload prototype archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: drupal-core
+          path: |
+            drupal-core/drupal-core.zip
+      - name: "configure AWS"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Upload artifact
+        run: aws s3 cp drupal-core/drupal-core.zip s3://wasm-drupal/assets/drupal-core.zip
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id ENEVO72R9T6H5 --paths "/assets/drupal-core.zip"

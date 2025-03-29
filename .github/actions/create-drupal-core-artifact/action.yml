@@ -1,0 +1,30 @@
+name: Creates Drupal Core artifact
+runs:
+  using: 'composite'
+  steps:
+    - name: "Install PHP"
+      uses: "shivammathur/setup-php@v2"
+      with:
+        coverage: "none"
+        php-version: "8.3"
+    - name: composer create-project
+      shell: bash
+      run: |
+        composer create-project drupal/recommended-project:^10 drupal-core --no-install
+    - name: process build
+      shell: bash
+      run: |
+        cd drupal-core
+        composer config --merge --json 'extra.drupal-scaffold.file-mapping' '{"[project-root]/.gitattributes": {"append": "../patches/.gitattributes"}}'
+        composer config --merge --json 'extra.drupal-scaffold.file-mapping' '{"[web-root]/sites/default/default.settings.php": {"append": "../patches/default.settings.php"}}'
+        composer config --merge --json 'extra.patches.drupal/core' '{"Remove Fibers from Renderer": "../patches/renderer-remove-fibers.patch"}'
+        composer config --merge --json 'extra.patches.drupal/core' '{"Remove file_system service usage from SQLite installer": "../patches/sqlite-file_system-service.patch"}'
+        composer config --merge --json 'extra.patches.drupal/core' '{"Reqs to OK": "../patches/system-reqs-wasm.patch"}'
+        
+        composer require cweagans/composer-patches --no-install
+        composer config --no-plugins allow-plugins.cweagans/composer-patches true
+        
+        composer install --no-dev
+    - name: composer archive
+      shell: bash
+      run: cd drupal-core && composer archive --format=zip --file=drupal-core

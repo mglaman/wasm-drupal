@@ -1,0 +1,109 @@
+<?php
+
+$stdErr = fopen('php://stderr', 'w');
+
+set_error_handler(function(...$args) use($stdErr, &$errors){
+    fwrite($stdErr, print_r($args,1));
+});
+
+$flavor = file_get_contents('/config/flavor.txt');
+$docroot = '/persist/' . $flavor;
+
+$install_params = \json_decode(
+    file_get_contents("/config/$flavor-install-params.json") ?: [],
+    true
+);
+
+chdir($docroot . '/web');
+
+$install_type = $install_params['installType'] ?? 'interactive';
+
+if ($install_type === 'interactive') {
+    exit;
+}
+
+if ($install_type === 'preinstalled') {
+    if (!is_dir('sites/default/files/css') && !mkdir('sites/default/files/css') && !is_dir('sites/default/files/css')) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/css'));
+    }
+    if (!is_dir('sites/default/files/js') && !mkdir('sites/default/files/js') && !is_dir('sites/default/files/js')) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', 'sites/default/files/js'));
+    }
+
+    print json_encode([
+        'message' => "Installed",
+        'type' => 'install',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;
+    exit;
+}
+
+$class_loader = require $docroot . '/vendor/autoload.php';
+
+$parameters = [
+    'interactive' => FALSE,
+    'site_path' => 'sites/default',
+    'parameters' => [
+        'profile' => $install_params['profile'] ?? 'standard',
+        'langcode' => $install_params['langcode'] ?? 'en',
+    ],
+    'forms' => [
+        'install_settings_form' => [
+            'driver' => 'Drupal\sqlite\Driver\Database\sqlite',
+            'sqlite' => [
+                'database' => 'sites/default/files/.sqlite',
+            ],
+        ],
+        'install_configure_form' => [
+            'site_name' => $install_params['siteName'],
+            'site_mail' => 'drupal@localhost',
+            'account' => [
+                'name' => 'admin',
+                'mail' => 'admin@localhost',
+                'pass' => [
+                    'pass1' => 'admin',
+                    'pass2' => 'admin',
+                ],
+            ],
+            'enable_update_status_module' => TRUE,
+            // \Drupal\Core\Render\Element\Checkboxes::valueCallback() requires
+            // NULL instead of FALSE values for programmatic form submissions to
+            // disable a checkbox.
+            'enable_update_status_emails' => NULL,
+        ],
+    ],
+];
+
+require_once 'core/includes/install.core.inc';
+
+try {
+    install_drupal($class_loader, $parameters, static function ($install_state) {
+        static $started = FALSE;
+        static $finished, $total = 0;
+        if (!$started) {
+            print json_encode([
+                    'message' => 'Beginning install tasks',
+                    'type' => 'install',
+                ], JSON_THROW_ON_ERROR) . PHP_EOL;
+
+            $started = TRUE;
+            $total = count(install_tasks_to_perform($install_state));
+        }
+        print json_encode([
+                'message' => "Performing install task ($finished / $total)",
+                'type' => 'install',
+            ], JSON_THROW_ON_ERROR) . PHP_EOL;
+        $finished++;
+    });
+
+    chmod('sites/default', 0755);
+    chmod('sites/default/settings.php', 0644);
+
+} catch (\Exception $e) {
+    print json_encode([
+        'message' => $e->getMessage(),
+        'type' => 'error',
+    ], JSON_THROW_ON_ERROR) . PHP_EOL;
+exit(1);
+}
+
+exit;

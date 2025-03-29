@@ -1,0 +1,19 @@
+patches export-ignore
+vendor/bin export-ignore
+web/core/tests/**/* export-ignore
+web/core/modules/*/tests/**/* export-ignore
+web/core/themes/*/tests/**/* export-ignore
+web/modules/*/tests/**/* export-ignore
+web/sites/default/files/php export-ignore
+web/core/assets/scaffold export-ignore
+
+vendor/*/.github/**/* export-ignore
+vendor/*/*.md export-ignore
+vendor/*/*.dist export-ignore
+vendor/*/*.lock export-ignore
+vendor/*/tests/**/* export-ignore
+
+# For starshot prototype
+tests export-ignore
+web/**/*.md export-ignore
+.ddev export-ignore

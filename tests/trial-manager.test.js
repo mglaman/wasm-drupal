@@ -45,9 +45,9 @@ describe('TrialManager', () => {
         sut.mode = 'existing_session';
         expect(sut.message).toBe('')
         expect(sut.getInnerHTML()).not.toContain('foobar')
-        expect(sut.getInnerHTML()).toContain('Resume session')
-        expect(sut.getInnerHTML()).toContain('New session')
-        expect(sut.getInnerHTML()).toContain('Export')
+        expect(sut.getInnerHTML()).toContain('Resume')
+        expect(sut.getInnerHTML()).toContain('New')
+        expect(sut.getInnerHTML()).toContain('Download')
     })
 
     it.each([

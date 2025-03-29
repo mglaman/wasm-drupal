@@ -53,7 +53,6 @@ export function setUpWorker(worker, PhpCgiWorker, prefix, docroot) {
         },
         env: {
             HTTP_USER_AGENT: worker.navigator.userAgent,
-            DRUPAL_CMS_TRIAL: '1',
         },
         ini: `
         date.timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone}

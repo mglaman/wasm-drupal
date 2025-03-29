@@ -27,6 +27,8 @@ vi.mock('../public/PhpWorker.mjs', () => {
 
 const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
+// @todo return response with body and reader.
+// fetchMocker.once('/foo/bar/baz.zip', )
 
 function createWorker() {
     return new Worker(new URL('../public/install-worker.mjs?worker', import.meta.url));

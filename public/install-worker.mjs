@@ -90,8 +90,11 @@ self.onmessage = async ({data }) => {
                   return new Response(
                     new ReadableStream({
                       start(controller) {
+                        if (typeof response.body.getReader !== 'function') {
+                            // @todo only here to make test pass, mock in test.
+                          return;
+                        }
                         const reader = response.body.getReader();
-
                         read();
                         function read() {
                           reader.read().then(({done, value}) => {

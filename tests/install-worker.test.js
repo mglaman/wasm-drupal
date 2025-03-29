@@ -27,8 +27,35 @@ vi.mock('../public/PhpWorker.mjs', () => {
 
 const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
-// @todo return response with body and reader.
-// fetchMocker.once('/foo/bar/baz.zip', )
+fetchMocker.mockResponse(
+    (req) => {
+        if (req.url === '/foo/bar/baz.zip') {
+            return Promise.resolve({
+                body: '',
+                status: 200,
+            });
+        }
+        if (req.url.endsWith('install-site.phpcode')) {
+            return Promise.resolve({
+                body: 'install-site.php',
+                status: 200,
+            });
+        }
+        if (req.url.endsWith('init.phpcode')) {
+            return Promise.resolve({
+                body: 'init.php',
+                status: 200,
+            });
+        }
+        if (req.url.endsWith('login-admin.phpcode')) {
+            return Promise.resolve({
+                body: 'login-admin.php',
+                status: 200,
+            });
+        }
+        return Promise.reject(new Error('not mocked'));
+    }
+);
 
 function createWorker() {
     return new Worker(new URL('../public/install-worker.mjs?worker', import.meta.url));
@@ -63,6 +90,7 @@ describe('install worker', () => {
                     artifact: '/foo/bar/baz.zip',
                     installParameters: {
                         autoLogin: true,
+                        installType: 'automated',
                     }
                 }
             },

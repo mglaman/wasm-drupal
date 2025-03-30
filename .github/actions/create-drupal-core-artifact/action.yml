@@ -51,4 +51,4 @@ runs:
         composer archive --format=zip --file="$INPUT_ARTIFACT_PATH"
       env:
         INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
-        $INPUT_ARTIFACT_PATH: ${{ inputs.artifact-path }}
+        INPUT_ARTIFACT_PATH: ${{ inputs.artifact-path }}

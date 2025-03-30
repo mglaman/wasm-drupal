@@ -6,8 +6,15 @@
     <title>Try Drupal Core</title>
     <link href="styles.css" rel="stylesheet">
 </head>
-<body class="bg-drupal-blue h-dvh">
-<trial-manager
+<body class="bg-drupal-blue bg-gradient-33-turn from-drupal-purple to-drupal-blue h-dvh flex flex-col justify-center">
+<div class="flex flex-col justify-center w-full max-w-screen-sm mx-auto border border-transparent rounded-lg bg-white py-8 px-4 shadow-lg">
+  <div>
+    <h1 class="font-black mb-8">
+      <span class="text-4xl">Drupal</span>
+      <span class="text-3xl opacity-75">Core</span>
+    </h1>
+  </div>
+  <trial-manager
         flavor="drupal"
         artifact="/assets/drupal-core.zip"
         site-name="Try Drupal Core"
@@ -15,6 +22,7 @@
         langcode="en"
         install-type="automated"
 ></trial-manager>
+</div>
 <script src="main.mjs" type="module"></script>
 </body>
 </html>

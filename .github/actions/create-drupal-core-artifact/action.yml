@@ -26,7 +26,7 @@ runs:
       run: |
         composer create-project drupal/recommended-project:"$INPUT_ARTIFACT_VERSION" "$INPUT_ARTIFACT_NAME" --no-install
       env:
-        INPUT_ARTIFACT_VERSION: ${{ inputs.artifact-name }}
+        INPUT_ARTIFACT_VERSION: ${{ inputs.artifact-version }}
         INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
     - name: process build
       shell: bash

@@ -24,7 +24,10 @@ runs:
     - name: composer create-project
       shell: bash
       run: |
-        composer create-project drupal/recommended-project:"$INPUT_ARTIFACT-VERSION" "$INPUT_ARTIFACT-NAME" --no-install
+        composer create-project drupal/recommended-project:"$INPUT_ARTIFACT_VERSION" "$INPUT_ARTIFACT_NAME" --no-install
+      env:
+        INPUT_ARTIFACT_VERSION: ${{ inputs.artifact-name }}
+        INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
     - name: process build
       shell: bash
       run: |
@@ -42,5 +45,8 @@ runs:
     - name: composer archive
       shell: bash
       run: |
-        cd "$INPUT_ARTIFACT-NAME"
-        composer archive --format=zip --file="$INPUT_ARTIFACT-PATH"
+        cd "$INPUT_ARTIFACT_NAME"
+        composer archive --format=zip --file="$INPUT_ARTIFACT_PATH"
+      env:
+        INPUT_ARTIFACT_VERSION: ${{ inputs.artifact-name }}
+        $INPUT_ARTIFACT_PATH: ${{ inputs.artifact-path }}

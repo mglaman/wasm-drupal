@@ -5,10 +5,10 @@ inputs:
     description: 'The name of the artifact to create'
     required: true
     default: 'drupal-core'
-  artifact-path:
-    description: 'The path to the artifact to create'
+  artifact-file:
+    description: 'The artifact file to create'
     required: true
-    default: 'drupal-core.zip'
+    default: 'drupal-core'
   artifact-version:
     description: 'The version of the artifact to create'
     required: true
@@ -46,9 +46,7 @@ runs:
         INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
     - name: composer archive
       shell: bash
-      run: |
-        cd "$INPUT_ARTIFACT_NAME"
-        composer archive --format=zip --file="$INPUT_ARTIFACT_PATH"
+      run: cd "$INPUT_ARTIFACT_NAME" && composer archive --format=zip --file="$INPUT_ARTIFACT_FILE"
       env:
         INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
-        INPUT_ARTIFACT_PATH: ${{ inputs.artifact-path }}
+        INPUT_ARTIFACT_FILE: ${{ inputs.artifact-file }}

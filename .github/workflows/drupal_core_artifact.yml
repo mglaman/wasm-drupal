@@ -14,7 +14,7 @@ jobs:
       - uses: ./.github/actions/create-drupal-core-artifact
         with:
           artifact-name: "drupal-core"
-          artifact-path: "drupal-core.zip"
+          artifact-file: "drupal-core"
           artifact-version: "^10"
       - name: Upload prototype archive
         uses: actions/upload-artifact@v4

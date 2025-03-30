@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
-concurrency: starshot
+concurrency: artifacts
 jobs:
   build:
     name: "Build drupal-core"
@@ -12,6 +12,10 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v4
       - uses: ./.github/actions/create-drupal-core-artifact
+        with:
+          artifact-name: "drupal-core"
+          artifact-file: "drupal-core"
+          artifact-version: "^10"
       - name: Upload prototype archive
         uses: actions/upload-artifact@v4
         with:

@@ -1,4 +1,18 @@
 name: Creates Drupal Core artifact
+description: Creates a Drupal Core artifact
+inputs:
+  artifact-name:
+    description: 'The name of the artifact to create'
+    required: true
+    default: 'drupal-core'
+  artifact-file:
+    description: 'The artifact file to create'
+    required: true
+    default: 'drupal-core'
+  artifact-version:
+    description: 'The version of the artifact to create'
+    required: true
+    default: '^10'
 runs:
   using: 'composite'
   steps:
@@ -10,21 +24,29 @@ runs:
     - name: composer create-project
       shell: bash
       run: |
-        composer create-project drupal/recommended-project:^10 drupal-core --no-install
+        composer create-project drupal/recommended-project:"$INPUT_ARTIFACT_VERSION" "$INPUT_ARTIFACT_NAME" --no-install
+      env:
+        INPUT_ARTIFACT_VERSION: ${{ inputs.artifact-version }}
+        INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
     - name: process build
       shell: bash
       run: |
-        cd drupal-core
+        cd "$INPUT_ARTIFACT_NAME"
         composer config --merge --json 'extra.drupal-scaffold.file-mapping' '{"[project-root]/.gitattributes": {"append": "../patches/.gitattributes"}}'
         composer config --merge --json 'extra.drupal-scaffold.file-mapping' '{"[web-root]/sites/default/default.settings.php": {"append": "../patches/default.settings.php"}}'
         composer config --merge --json 'extra.patches.drupal/core' '{"Remove Fibers from Renderer": "../patches/renderer-remove-fibers.patch"}'
         composer config --merge --json 'extra.patches.drupal/core' '{"Remove file_system service usage from SQLite installer": "../patches/sqlite-file_system-service.patch"}'
         composer config --merge --json 'extra.patches.drupal/core' '{"Reqs to OK": "../patches/system-reqs-wasm.patch"}'
-        
+
         composer require cweagans/composer-patches --no-install
         composer config --no-plugins allow-plugins.cweagans/composer-patches true
-        
+
         composer install --no-dev
+      env:
+        INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
     - name: composer archive
       shell: bash
-      run: cd drupal-core && composer archive --format=zip --file=drupal-core
+      run: cd "$INPUT_ARTIFACT_NAME" && composer archive --format=zip --file="$INPUT_ARTIFACT_FILE"
+      env:
+        INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        INPUT_ARTIFACT_FILE: ${{ inputs.artifact-file }}

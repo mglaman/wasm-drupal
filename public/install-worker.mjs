@@ -120,16 +120,15 @@ self.onmessage = async ({data }) => {
                   );
                 })
 
-
-                const zipContents = await download.arrayBuffer();
-
                 postMessage({
                     action: 'status',
                     params,
                     message: 'Saving archive'
                 })
-
+                console.log('Converting archive to array buffer');
+                const zipContents = await download.arrayBuffer();
                 await php.writeFile('/config/flavor.txt', flavor)
+                console.log('Writing archive to disk');
                 await php.writeFile('/persist/artifact.zip', new Uint8Array(zipContents))
 
                 postMessage({

@@ -13,7 +13,7 @@ jobs:
     needs: [build]
     steps:
       - name: Download Drupal artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: demo
       - name: "configure AWS"

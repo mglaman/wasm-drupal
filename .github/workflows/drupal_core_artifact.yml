@@ -17,7 +17,7 @@ jobs:
           artifact-file: "drupal-core"
           artifact-version: "^10"
       - name: Upload prototype archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: drupal-core
           path: |
